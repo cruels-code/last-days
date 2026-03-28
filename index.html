@@ -5,8 +5,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LD:ZA Squad Manager</title>
     
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Rajdhani"', 'sans-serif'],
+                        mono: ['"Share Tech Mono"', 'monospace'],
+                        display: ['"Rajdhani"', 'sans-serif'],
+                        typewriter: ['"Share Tech Mono"', 'monospace'],
+                    },
+                    colors: {
+                        stone: {
+                            950: '#0b0f12',
+                            900: '#11181c',
+                            800: '#1a2329',
+                            700: '#243038',
+                            600: '#32424d',
+                            500: '#435766',
+                            400: '#5c7485',
+                            300: '#7d95a6',
+                            200: '#a3b8c7',
+                            100: '#d1e0eb',
+                        },
+                        amber: {
+                            500: '#f59e0b',
+                            600: '#d97706',
+                        },
+                        red: {
+                            300: '#fca5a5',
+                            400: '#f87171',
+                            500: '#ef4444',
+                            600: '#dc2626',
+                            700: '#b91c1c',
+                            800: '#991b1b',
+                            900: '#7f1d1d',
+                            950: '#450a0a',
+                        },
+                        green: {
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                            950: '#052e16',
+                        },
+                        blue: {
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     
     <!-- React & ReactDOM -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -18,11 +77,111 @@
     <style>
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(120, 113, 108, 0.5); border-radius: 2px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(168, 162, 158, 0.8); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #435766; border-radius: 2px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #5c7485; }
+        
+        .scanlines {
+            display: none;
+        }
+        
+        .vignette {
+            display: none;
+        }
+
+        .hud-border {
+            position: relative;
+        }
+        .hud-border::before, .hud-border::after {
+            content: '';
+            position: absolute;
+            width: 6px; height: 6px;
+            border: 1px solid #5c7485;
+            pointer-events: none;
+        }
+        .hud-border::before { top: 0; left: 0; border-right: none; border-bottom: none; }
+        .hud-border::after { bottom: 0; right: 0; border-left: none; border-top: none; }
+        
+        .hud-border-danger::before, .hud-border-danger::after {
+            border-color: #ef4444;
+        }
+        
+        .stencil {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+        
+        .typewriter {
+            font-family: 'Share Tech Mono', monospace;
+        }
+    
+        body {
+            background-color: #000;
+            color: #4ade80;
+            text-shadow: 0 0 4px rgba(74, 222, 128, 0.4);
+        }
+        
+        /* Scanlines */
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* Screen flicker */
+        @keyframes flicker {
+            0% { opacity: 0.95; }
+            5% { opacity: 0.85; }
+            10% { opacity: 0.95; }
+            15% { opacity: 1; }
+            100% { opacity: 1; }
+        }
+        body::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: rgba(74, 222, 128, 0.02);
+            opacity: 0;
+            z-index: 2;
+            pointer-events: none;
+            animation: flicker 0.15s infinite;
+        }
+        
+        .stencil, .typewriter {
+            text-shadow: 0 0 5px currentColor;
+        }
+        
+        /* Custom Scrollbar for terminal */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #000; 
+            border-left: 1px solid #14532d;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #166534; 
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #22c55e; 
+        }
+
     </style>
 </head>
-<body class="bg-stone-950 text-stone-300 font-sans h-screen w-screen overflow-hidden">
+<body class="bg-black text-green-400 font-mono h-screen w-screen overflow-hidden relative">
     
     <div id="root" class="h-full w-full"></div>
 
@@ -85,13 +244,26 @@
           "Handgun": { type: "Ranged", range: 12, fa: 1, str: 3, cap: "15" },
           "Revolver": { type: "Ranged", range: 12, fa: 1, str: 4, cap: "6" },
           "Shotgun": { type: "Ranged", range: 12, fa: 2, str: 4, cap: "6" },
+          "Pump Action Shotgun": { type: "Ranged", range: 12, fa: 2, str: 4, cap: "6" },
+          "Double Barrel Shotgun": { type: "Ranged", range: 12, fa: 2, str: 4, cap: "2" },
+          "Sawn-Off Shotgun": { type: "Ranged", range: 8, fa: 2, str: 4, cap: "2" },
           "Surplus SMG": { type: "Ranged", range: 12, fa: 1, str: 3, cap: "30" },
           "Modern SMG": { type: "Ranged", range: 16, fa: 1, str: 3, cap: "30" },
           "Hunting Rifle": { type: "Ranged", range: 36, fa: 1, str: 4, cap: "5" },
+          "Sniper Rifle": { type: "Ranged", range: 48, fa: 1, str: 4, cap: "5" },
           "Military Assault Rifle": { type: "Ranged", range: 24, fa: 1, str: 4, cap: "30" },
+          "LMG": { type: "Ranged", range: 36, fa: 1, str: 4, cap: "100" },
+          "Grenade Launcher": { type: "Ranged", range: 24, fa: 0, str: 5, cap: "1" },
+          "Rocket Launcher": { type: "Ranged", range: 36, fa: 0, str: 8, cap: "1" },
+          "Flamethrower": { type: "Ranged", range: 8, fa: 2, str: 4, cap: "10" },
           "Bow": { type: "Ranged", range: 24, fa: 0, str: 3, cap: "1" },
           "Crossbow": { type: "Ranged", range: 24, fa: 1, str: 4, cap: "1" },
           "Thrown Weapon": { type: "Ranged", range: 8, fa: 0, str: 0, cap: "1" },
+          "Frag Grenade": { type: "Ranged", range: 8, fa: 0, str: 5, cap: "1" },
+          "Molotov Cocktail": { type: "Ranged", range: 8, fa: 0, str: 4, cap: "1" },
+          "Smoke Grenade": { type: "Ranged", range: 8, fa: 0, str: 0, cap: "1" },
+          "Silenced Handgun": { type: "Ranged", range: 12, fa: 1, str: 3, cap: "15" },
+          "Silenced SMG": { type: "Ranged", range: 16, fa: 1, str: 3, cap: "30" },
           "Heavy Blade": { type: "Melee", cqc: 0, str: 2 },
           "Heavy Club": { type: "Melee", cqc: 0, str: 2 },
           "Knife": { type: "Melee", cqc: 0, str: 0 },
@@ -99,10 +271,19 @@
           "Machete/Hatchet": { type: "Melee", cqc: 0, str: 1 },
           "Chainsaw": { type: "Melee", cqc: 1, str: 3 },
           "Reach Weapon": { type: "Melee", cqc: 0, str: 1 },
-          "Improvised Weapon": { type: "Melee", cqc: 0, str: 0 }
+          "Spear": { type: "Melee", cqc: 0, str: 1 },
+          "Pitchfork": { type: "Melee", cqc: 0, str: 1 },
+          "Sledgehammer": { type: "Melee", cqc: 0, str: 3 },
+          "Fire Axe": { type: "Melee", cqc: 0, str: 2 },
+          "Baseball Bat": { type: "Melee", cqc: 0, str: 1 },
+          "Crowbar": { type: "Melee", cqc: 0, str: 1 },
+          "Improvised Weapon": { type: "Melee", cqc: 0, str: 0 },
+          "Katana": { type: "Melee", cqc: 1, str: 2 },
+          "Combat Knife": { type: "Melee", cqc: 1, str: 1 },
+          "Stun Baton": { type: "Melee", cqc: 1, str: 0 }
         };
 
-        const EQUIPMENT_LIST = Object.keys(WEAPON_DATA).concat(["Medical Supplies", "Flashlight", "Walkie Talkie", "Binoculars", "Kevlar Vest", "Riot Gear"]);
+        const EQUIPMENT_LIST = Object.keys(WEAPON_DATA).concat(["Medical Supplies", "Flashlight", "Walkie Talkie", "Binoculars", "Kevlar Vest", "Riot Gear", "Riot Shield", "Gas Mask", "Lockpicks", "Tool Kit", "First Aid Kit", "Adrenaline", "Night Vision Goggles", "Body Armour", "Backpack", "Silencer", "Laser Sight", "Scope", "Flare", "Radio", "Rope", "Tent"]);
 
         const SKILL_LIST = [
           // Base Attributes
@@ -117,7 +298,7 @@
           // Academic Tree (Pg 90)
           "Medic", "Engineer", "Scientist", "Instructor", "Investigator",
           // Athletic Tree (Pg 90)
-          "Runner", "Climber", "Acrobat", "Dodger", "Tough",
+          "Runner", "Climber", "Free Runner", "Dodger", "Tough",
           // Survival Tree (Pg 90)
           "Stealth", "Scavenger", "Tracker", "Hunter", "Trapper"
         ];
@@ -242,6 +423,11 @@
           "First Aid Training": "May use Medical Supplies during the Scavenge Phase (1 AP, restore 1 DC) or Aftermath Phase (re-roll an Injury).",
           "Inspirational Presence": "Friendly models within 6” may use this model’s Courage (C) characteristic instead of their own for Courage Tests.",
           "None": "No special innate abilities.",
+          "Noisy 1": "Generates 1 extra Noise token when activating.",
+          "Crowd Control": "Enemies in base contact suffer -1 to their CQC.",
+          "Animal": "Cannot carry items, open doors, or use equipment.",
+          "Tactical Acumen": "Once per game, you may re-roll a Priority roll.",
+          "Gunsmith": "Can repair jammed firearms without needing a Workshop.",
           
           // Skill Trees
           "Firearms": "Unlocks access to the Firearms Skill Tree.",
@@ -281,7 +467,7 @@
           // Athletic Tree
           "Runner": "This model adds +1” to its total Movement allowance.",
           "Climber": "This model suffers no movement penalty when climbing.",
-          "Acrobat": "This model can jump gaps of up to 3” without needing to test.",
+          "Free Runner": "This model can jump gaps of up to 3” without needing to test.",
           "Dodger": "This model has a 6+ Save against all Firearms attacks.",
           "Tough": "This model adds +1 to its Endurance characteristic.",
           
@@ -293,30 +479,68 @@
           "Trapper": "For 2 AP, this model can set a trap. Any model moving within 1” takes a D6 S3 hit.",
 
           // Equipment 
-          "Handgun": "Ranged Weapon. Range: 12”, FA Modifier: +1, Strength: 3. Rules: Loud, Reliable. Ammo Capacity: 15.",
-          "Revolver": "Ranged Weapon. Range: 12”, FA Modifier: +1, Strength: 4. Rules: Loud, Reliable. Ammo Capacity: 6.",
-          "Shotgun": "Ranged Weapon. Range: 12”, FA Modifier: +2, Strength: 4. Rules: Loud, Scatter. Ammo Capacity: 6.",
-          "Surplus SMG": "Ranged Weapon. Range: 12”, FA Modifier: +1, Strength: 3. Rules: Loud, Full Auto. Ammo Capacity: 30.",
-          "Modern SMG": "Ranged Weapon. Range: 16”, FA Modifier: +1, Strength: 3. Rules: Loud, Full Auto. Ammo Capacity: 30.",
-          "Hunting Rifle": "Ranged Weapon. Range: 36”, FA Modifier: +1, Strength: 4. Rules: Loud. Ammo Capacity: 5.",
-          "Military Assault Rifle": "Ranged Weapon. Range: 24”, FA Modifier: +1, Strength: 4. Rules: Loud, Full Auto. Ammo Capacity: 30.",
-          "Bow": "Ranged Weapon. Range: 24”, FA Modifier: -, Strength: 3. Rules: Silent. Ammo Capacity: 1.",
-          "Crossbow": "Ranged Weapon. Range: 24”, FA Modifier: +1, Strength: 4. Rules: Silent, Reload. Ammo Capacity: 1.",
-          "Thrown Weapon": "Ranged Weapon. Range: 8”, FA Modifier: -, Strength: User. Rules: Silent, Thrown. Ammo Capacity: 1.",
-          "Heavy Blade": "Close Quarters Weapon. CQC Modifier: -, Strength: +2. Rules: Heavy, Slashing.",
-          "Heavy Club": "Close Quarters Weapon. CQC Modifier: -, Strength: +2. Rules: Heavy, Bludgeoning.",
-          "Knife": "Close Quarters Weapon. CQC Modifier: -, Strength: -. Rules: Fast.",
-          "Club": "Close Quarters Weapon. CQC Modifier: -, Strength: -. Rules: Bludgeoning.",
-          "Machete/Hatchet": "Close Quarters Weapon. CQC Modifier: -, Strength: +1. Rules: Slashing.",
-          "Chainsaw": "Close Quarters Weapon. CQC Modifier: +1, Strength: +3. Rules: Heavy, Slashing, Loud. Ammo Capacity: Gas Tank.",
-          "Reach Weapon": "Close Quarters Weapon. CQC Modifier: -, Strength: +1. Rules: Reach.",
-          "Improvised Weapon": "Close Quarters Weapon. CQC Modifier: -, Strength: -. Rules: Bludgeoning or Slashing, Cumbersome.",
+          "Handgun": "Ranged Weapon. Range: 12”, FA Modifier: +1, Strength: 3. Rules: Loud, Reliable, Lobotomizer 1. Ammo Capacity: 15.",
+          "Revolver": "Ranged Weapon. Range: 12”, FA Modifier: +1, Strength: 4. Rules: Loud, Reliable, Lobotomizer 2. Ammo Capacity: 6.",
+          "Shotgun": "Ranged Weapon. Range: 12”, FA Modifier: +2, Strength: 4. Rules: Loud, Scatter, Lobotomizer 2. Ammo Capacity: 6.",
+          "Pump Action Shotgun": "Ranged Weapon. Range: 12”, FA Modifier: +2, Strength: 4. Rules: Loud, Scatter, Lobotomizer 2. Ammo Capacity: 6.",
+          "Double Barrel Shotgun": "Ranged Weapon. Range: 12”, FA Modifier: +2, Strength: 4. Rules: Loud, Scatter, Lobotomizer 2. Ammo Capacity: 2.",
+          "Sawn-Off Shotgun": "Ranged Weapon. Range: 8”, FA Modifier: +2, Strength: 4. Rules: Loud, Scatter, Lobotomizer 2. Ammo Capacity: 2.",
+          "Surplus SMG": "Ranged Weapon. Range: 12”, FA Modifier: +1, Strength: 3. Rules: Loud, Full Auto, Lobotomizer 1. Ammo Capacity: 30.",
+          "Modern SMG": "Ranged Weapon. Range: 16”, FA Modifier: +1, Strength: 3. Rules: Loud, Full Auto, Lobotomizer 1. Ammo Capacity: 30.",
+          "Hunting Rifle": "Ranged Weapon. Range: 36”, FA Modifier: +1, Strength: 4. Rules: Loud, Lobotomizer 2. Ammo Capacity: 5.",
+          "Sniper Rifle": "Ranged Weapon. Range: 48”, FA Modifier: +1, Strength: 4. Rules: Loud, Accurate, Lobotomizer 3. Ammo Capacity: 5.",
+          "Military Assault Rifle": "Ranged Weapon. Range: 24”, FA Modifier: +1, Strength: 4. Rules: Loud, Full Auto, Lobotomizer 2. Ammo Capacity: 30.",
+          "LMG": "Ranged Weapon. Range: 36”, FA Modifier: +1, Strength: 4. Rules: Loud, Full Auto, Heavy, Lobotomizer 2. Ammo Capacity: 100.",
+          "Grenade Launcher": "Ranged Weapon. Range: 24”, FA Modifier: +0, Strength: 5. Rules: Loud, Blast, Lobotomizer 3. Ammo Capacity: 1.",
+          "Rocket Launcher": "Ranged Weapon. Range: 36”, FA Modifier: +0, Strength: 8. Rules: Loud, Heavy, Blast, Lobotomizer 4. Ammo Capacity: 1.",
+          "Flamethrower": "Ranged Weapon. Range: 8”, FA Modifier: +2, Strength: 4. Rules: Loud, Heavy, Fire, Lobotomizer 3. Ammo Capacity: 10.",
+          "Bow": "Ranged Weapon. Range: 24”, FA Modifier: -, Strength: 3. Rules: Silent, Lobotomizer 1. Ammo Capacity: 1.",
+          "Crossbow": "Ranged Weapon. Range: 24”, FA Modifier: +1, Strength: 4. Rules: Silent, Reload, Lobotomizer 2. Ammo Capacity: 1.",
+          "Thrown Weapon": "Ranged Weapon. Range: 8”, FA Modifier: -, Strength: User. Rules: Silent, Thrown, Lobotomizer 1. Ammo Capacity: 1.",
+          "Frag Grenade": "Thrown Weapon. Range: 8”, FA Modifier: -, Strength: 5. Rules: Loud, Blast, Lobotomizer 2. Ammo Capacity: 1.",
+          "Molotov Cocktail": "Thrown Weapon. Range: 8”, FA Modifier: -, Strength: 4. Rules: Loud, Blast, Fire, Lobotomizer 1. Ammo Capacity: 1.",
+          "Smoke Grenade": "Thrown Weapon. Range: 8”, FA Modifier: -, Strength: -. Rules: Smoke. Ammo Capacity: 1.",
+          "Silenced Handgun": "Ranged Weapon. Range: 12”, FA Modifier: +1, Strength: 3. Rules: Silent, Reliable, Lobotomizer 1. Ammo Capacity: 15.",
+          "Silenced SMG": "Ranged Weapon. Range: 16”, FA Modifier: +1, Strength: 3. Rules: Silent, Full Auto, Lobotomizer 1. Ammo Capacity: 30.",
+          "Heavy Blade": "Close Quarters Weapon. CQC Modifier: -, Strength: +2. Rules: Heavy, Slashing, Lobotomizer 2.",
+          "Heavy Club": "Close Quarters Weapon. CQC Modifier: -, Strength: +2. Rules: Heavy, Bludgeoning, Lobotomizer 2.",
+          "Knife": "Close Quarters Weapon. CQC Modifier: -, Strength: -. Rules: Fast, Lobotomizer 1.",
+          "Club": "Close Quarters Weapon. CQC Modifier: -, Strength: -. Rules: Bludgeoning, Lobotomizer 1.",
+          "Machete/Hatchet": "Close Quarters Weapon. CQC Modifier: -, Strength: +1. Rules: Slashing, Lobotomizer 2.",
+          "Chainsaw": "Close Quarters Weapon. CQC Modifier: +1, Strength: +3. Rules: Heavy, Slashing, Loud, Lobotomizer 3. Ammo Capacity: Gas Tank.",
+          "Reach Weapon": "Close Quarters Weapon. CQC Modifier: -, Strength: +1. Rules: Reach, Lobotomizer 1.",
+          "Spear": "Close Quarters Weapon. CQC Modifier: -, Strength: +1. Rules: Reach, Lobotomizer 1.",
+          "Pitchfork": "Close Quarters Weapon. CQC Modifier: -, Strength: +1. Rules: Reach, Lobotomizer 1.",
+          "Sledgehammer": "Close Quarters Weapon. CQC Modifier: -, Strength: +3. Rules: Heavy, Bludgeoning, Lobotomizer 2.",
+          "Fire Axe": "Close Quarters Weapon. CQC Modifier: -, Strength: +2. Rules: Heavy, Slashing, Lobotomizer 2.",
+          "Baseball Bat": "Close Quarters Weapon. CQC Modifier: -, Strength: +1. Rules: Bludgeoning, Lobotomizer 1.",
+          "Crowbar": "Close Quarters Weapon. CQC Modifier: -, Strength: +1. Rules: Bludgeoning, Entry Tool, Lobotomizer 1.",
+          "Improvised Weapon": "Close Quarters Weapon. CQC Modifier: -, Strength: -. Rules: Bludgeoning or Slashing, Cumbersome, Lobotomizer 0.",
+          "Katana": "Close Quarters Weapon. CQC Modifier: +1, Strength: +2. Rules: Slashing, Lobotomizer 2.",
+          "Combat Knife": "Close Quarters Weapon. CQC Modifier: +1, Strength: +1. Rules: Slashing, Lobotomizer 1.",
+          "Stun Baton": "Close Quarters Weapon. CQC Modifier: +1, Strength: +0. Rules: Bludgeoning, Stun, Lobotomizer 1.",
           "Medical Supplies": "Equipment. Used with First Aid Training to heal 1 Damage Point or re-roll a result on the Injury Table.",
           "Flashlight": "Equipment. Removes the darkness penalty in Night scenarios.",
           "Walkie Talkie": "Equipment. Extends the Leader's Inspirational Presence range to the entire board.",
           "Binoculars": "Equipment. Grants +1 to finding items in the Scavenge Phase.",
           "Kevlar Vest": "Equipment. Grants the wearer +1 Endurance against Firearms attacks.",
           "Riot Gear": "Equipment. Grants the wearer +1 Endurance against Close Quarters Combat attacks.",
+          "Riot Shield": "Equipment. Grants +2 Endurance against Close Quarters Combat attacks.",
+          "Gas Mask": "Equipment. Immune to gas and smoke effects.",
+          "Lockpicks": "Equipment. Adds +2 when attempting to pick locks.",
+          "Tool Kit": "Equipment. Required to repair vehicles or complex machinery.",
+          "First Aid Kit": "Equipment. Restores 2 Damage Points when used.",
+          "Adrenaline": "Equipment. Grants +2 AP for one turn, then the model is Exhausted.",
+          "Night Vision Goggles": "Equipment. Ignores all darkness penalties.",
+          "Body Armour": "Equipment. Grants +2 Endurance against Firearms attacks.",
+          "Backpack": "Equipment. Allows the model to carry 2 additional items.",
+          "Silencer": "Equipment. Can be attached to a Handgun or SMG to make it Silent.",
+          "Laser Sight": "Equipment. Grants +1 to Firearms tests at short range.",
+          "Scope": "Equipment. Grants +1 to Firearms tests at long range.",
+          "Flare": "Equipment. Can be thrown to illuminate an area or distract enemies.",
+          "Radio": "Equipment. Allows communication over long distances.",
+          "Rope": "Equipment. Grants +2 to climbing tests.",
+          "Tent": "Equipment. Provides shelter during the Scavenge Phase, restoring 1 additional AP.",
           
           // Refuge Perks & Upgrades
           "Fenced-Off Garden": "Aftermath Phase: Roll a D6. On a 4+, generate 1 Scavenge Point.",
@@ -369,7 +593,8 @@
             squad: initialSquad,
             baseType: 'The Farm House',
             baseUpgrades: [],
-            scavengePoints: 0
+            scavengePoints: 0,
+            stash: []
           }]);
           const [historyIndex, setHistoryIndex] = useState(0);
 
@@ -378,6 +603,7 @@
           const baseType = currentData.baseType;
           const baseUpgrades = currentData.baseUpgrades;
           const scavengePoints = currentData.scavengePoints;
+          const stash = currentData.stash || [];
           
           const [selectedCharId, setSelectedCharId] = useState(null);
           const [notification, setNotification] = useState(null);
@@ -390,6 +616,7 @@
           const [recruitType, setRecruitType] = useState(Object.keys(CHARACTER_ARCHETYPES)[1]); // Start with Survivor
           const [recruitKeyword, setRecruitKeyword] = useState("Neutral");
           const [newEq, setNewEq] = useState("");
+          const [newStashEq, setNewStashEq] = useState("");
           const [newSkill, setNewSkill] = useState("");
           const [selectedInjury, setSelectedInjury] = useState("Chest Wound (8)");
 
@@ -419,7 +646,7 @@
             const dataToSave = {
               version: "1.9",
               timestamp: new Date().toISOString(),
-              squadName, squad, baseType, baseUpgrades, scavengePoints
+              squadName, squad, baseType, baseUpgrades, scavengePoints, stash
             };
             const blob = new Blob([JSON.stringify(dataToSave, null, 2)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
@@ -469,7 +696,8 @@
                     squad: migratedSquad,
                     baseType: migratedBaseType,
                     baseUpgrades: importedData.baseUpgrades || [],
-                    scavengePoints: importedData.scavengePoints || 0
+                    scavengePoints: importedData.scavengePoints || 0,
+                    stash: importedData.stash || []
                   });
                   showNotify("Backup restored successfully. Welcome back.");
                   setMode('base');
@@ -694,76 +922,79 @@
 
           return (
             <div className="h-full w-full flex flex-col relative selection:bg-red-900 selection:text-white">
-              <div className="absolute inset-0 pointer-events-none opacity-30 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-stone-950 to-black z-0"></div>
+              <div className="scanlines"></div>
+              <div className="vignette"></div>
+              <div className="absolute inset-0 pointer-events-none opacity-30 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-green-950 to-black z-0"></div>
               
               <input type="file" accept=".json" ref={fileInputRef} onChange={handleFileImport} style={{ display: 'none' }} />
 
               {notification && (
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-amber-500 text-stone-950 px-4 py-2 rounded-md font-bold font-mono text-sm shadow-[0_0_20px_rgba(245,158,11,0.6)] flex items-center gap-2 max-w-[90vw] text-center transition-all animate-in slide-in-from-top-4">
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-amber-500 text-black px-4 py-2 rounded-md font-bold font-mono text-sm shadow-lg flex items-center gap-2 max-w-[90vw] text-center transition-all animate-in slide-in-from-top-4">
                   <AlertTriangle size={18} className="shrink-0" /> 
                   <span className="leading-tight">{notification}</span>
                 </div>
               )}
               {confirmDialog && (
                 <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center backdrop-blur-sm p-4">
-                  <div className="bg-stone-900 border border-red-900 p-6 rounded-sm max-w-md w-full shadow-[0_0_30px_rgba(220,38,38,0.3)]">
+                  <div className="bg-green-950/30 border border-red-900 p-6 rounded-sm max-w-md w-full shadow-xl">
                     <div className="flex items-center gap-3 text-red-500 mb-4">
                       <AlertTriangle size={24} />
-                      <h3 className="text-lg font-black uppercase tracking-wider">Confirm Action</h3>
+                      <h3 className="text-xl stencil uppercase tracking-wider ">Confirm Action</h3>
                     </div>
-                    <p className="font-mono text-sm text-stone-300 mb-6">{confirmDialog.message}</p>
+                    <p className="font-mono text-sm text-green-400 mb-6">{confirmDialog.message}</p>
                     <div className="flex gap-3 justify-end">
-                      <button onClick={() => setConfirmDialog(null)} className="px-4 py-3 border border-stone-600 text-stone-400 hover:bg-stone-800 active:bg-stone-700 active:scale-95 rounded-sm font-mono text-xs uppercase transition-all">Cancel</button>
-                      <button onClick={confirmDialog.onConfirm} className="px-4 py-3 bg-red-950 border border-red-800 text-red-400 hover:bg-red-900 hover:text-white active:bg-red-800 active:scale-95 rounded-sm font-mono text-xs uppercase transition-all">Confirm Execute</button>
+                      <button onClick={() => setConfirmDialog(null)} className="px-4 py-3 border border-green-700/80 text-green-500 hover:bg-green-900/40 active:bg-green-800/50 active:scale-95 rounded-sm stencil text-sm uppercase transition-all ">Cancel</button>
+                      <button onClick={confirmDialog.onConfirm} className="px-4 py-3 bg-red-950 border border-red-800 text-red-400 hover:bg-red-900 hover:text-white active:bg-red-800 active:scale-95 rounded-sm stencil text-sm uppercase transition-all ">Confirm Execute</button>
                     </div>
                   </div>
                 </div>
               )}
 
-              <header className="flex-none p-2 md:p-3 border-b-2 border-red-900/40 bg-stone-900/80 shadow-[0_4px_20px_rgba(0,0,0,0.7)] z-10 flex flex-wrap justify-between items-center gap-2">
+              <header className="flex-none p-2 md:p-3 border-b-2 border-red-900/40 bg-green-950/30/80 shadow-md z-10 flex flex-wrap justify-between items-center gap-2 relative">
+                <div className=" absolute bottom-0 left-0 w-full h-1 opacity-50"></div>
                 <div className="flex-1 min-w-0 pr-2">
                   <input 
                     type="text"
                     value={squadName}
                     onChange={(e) => setSquadName(e.target.value)}
-                    className="w-full bg-transparent border-b border-transparent hover:border-red-900/50 focus:border-red-600 focus:outline-none text-xl md:text-2xl font-black text-red-600 tracking-widest uppercase drop-shadow-[0_0_8px_rgba(220,38,38,0.5)] transition-colors truncate"
+                    className="w-full bg-transparent border-b border-transparent hover:border-red-900/50 focus:border-red-600 focus:outline-none text-xl md:text-3xl stencil text-red-600 tracking-widest uppercase drop-shadow-sm transition-colors truncate"
                     placeholder="ENTER SQUAD NAME"
                   />
-                  <p className="text-[10px] md:text-xs font-mono text-stone-500 uppercase tracking-widest hidden sm:block truncate mt-1">
+                  <p className="text-[10px] md:text-xs font-mono text-green-500 uppercase tracking-widest hidden sm:block truncate mt-1 ">
                     LD:ZA // {mode === 'tactical' ? 'Combat Tactical Roster' : 'Base Management System'}
                   </p>
                 </div>
                 
                 <div className="flex items-center gap-2 shrink-0">
-                  <div className="flex border-r border-stone-700 pr-2 mr-1 gap-1">
-                    <button onClick={handleUndo} disabled={historyIndex === 0} title="Undo Action" className="flex items-center justify-center p-2 bg-stone-950 hover:bg-stone-800 active:bg-stone-700 active:scale-95 disabled:opacity-30 disabled:active:scale-100 text-stone-400 rounded-sm font-mono text-[10px] border border-stone-800 transition-all">
+                  <div className="flex border-r border-green-800/80 pr-2 mr-1 gap-1">
+                    <button onClick={handleUndo} disabled={historyIndex === 0} title="Undo Action" className="flex items-center justify-center p-2 bg-black hover:bg-green-900/40 active:bg-green-800/50 active:scale-95 disabled:opacity-30 disabled:active:scale-100 text-green-500 rounded-sm stencil text-xs border border-green-900/80 transition-all ">
                       <Undo2 size={16} />
                     </button>
-                    <button onClick={handleRedo} disabled={historyIndex === history.length - 1} title="Redo Action" className="flex items-center justify-center p-2 bg-stone-950 hover:bg-stone-800 active:bg-stone-700 active:scale-95 disabled:opacity-30 disabled:active:scale-100 text-stone-400 rounded-sm font-mono text-[10px] border border-stone-800 transition-all">
+                    <button onClick={handleRedo} disabled={historyIndex === history.length - 1} title="Redo Action" className="flex items-center justify-center p-2 bg-black hover:bg-green-900/40 active:bg-green-800/50 active:scale-95 disabled:opacity-30 disabled:active:scale-100 text-green-500 rounded-sm stencil text-xs border border-green-900/80 transition-all ">
                       <Redo2 size={16} />
                     </button>
                   </div>
 
-                  <div className="flex border-r border-stone-700 pr-2 mr-1 gap-1">
-                    <button onClick={handleExportBackup} title="Backup Data" className="flex items-center justify-center px-2 py-2 md:py-1.5 bg-stone-950 hover:bg-stone-800 active:scale-95 text-stone-400 rounded-sm font-mono text-[10px] border border-stone-800 transition-all">
+                  <div className="flex border-r border-green-800/80 pr-2 mr-1 gap-1">
+                    <button onClick={handleExportBackup} title="Backup Data" className="flex items-center justify-center px-2 py-2 md:py-1.5 bg-black hover:bg-green-900/40 active:scale-95 text-green-500 rounded-sm stencil text-xs border border-green-900/80 transition-all ">
                       <Download size={16} className="lg:mr-1" /> <span className="hidden lg:inline uppercase">Backup</span>
                     </button>
-                    <button onClick={handleImportClick} title="Restore Data" className="flex items-center justify-center px-2 py-2 md:py-1.5 bg-stone-950 hover:bg-stone-800 active:scale-95 text-stone-400 rounded-sm font-mono text-[10px] border border-stone-800 transition-all">
+                    <button onClick={handleImportClick} title="Restore Data" className="flex items-center justify-center px-2 py-2 md:py-1.5 bg-black hover:bg-green-900/40 active:scale-95 text-green-500 rounded-sm stencil text-xs border border-green-900/80 transition-all ">
                       <Upload size={16} className="lg:mr-1" /> <span className="hidden lg:inline uppercase">Restore</span>
                     </button>
                   </div>
 
                   {mode === 'tactical' ? (
                     <>
-                      <button onClick={resetTurnTrackers} className="flex items-center gap-2 px-3 py-2 bg-stone-950 hover:bg-red-950 active:scale-95 text-stone-400 hover:text-red-400 rounded-sm font-mono text-[10px] md:text-xs tracking-wider uppercase transition-all border border-stone-800 shadow-sm">
-                        <Crosshair size={16} /> <span className="hidden sm:inline">End Turn</span>
+                      <button onClick={resetTurnTrackers} className="flex items-center gap-2 px-3 py-2 bg-black hover:bg-red-950 active:scale-95 text-green-500 hover:text-red-400 rounded-sm stencil text-xs tracking-wider uppercase transition-all border border-green-900/80 shadow-sm ">
+                        <Crosshair size={16} /> <span className="hidden sm:inline">Clear All Noise</span>
                       </button>
-                      <button onClick={() => setMode('base')} className="flex items-center gap-2 px-3 py-2 bg-stone-800 hover:bg-stone-700 active:scale-95 text-stone-200 rounded-sm font-mono text-[10px] md:text-xs tracking-wider uppercase transition-all border border-stone-600 shadow-sm">
+                      <button onClick={() => setMode('base')} className="flex items-center gap-2 px-3 py-2 bg-green-900/40 hover:bg-green-800/50 active:scale-95 text-green-300 rounded-sm stencil text-xs tracking-wider uppercase transition-all border border-green-700/80 shadow-sm ">
                         <Home size={16} /> <span className="hidden sm:inline">Base MGT</span>
                       </button>
                     </>
                   ) : (
-                    <button onClick={() => setMode('tactical')} className="flex items-center gap-2 px-3 py-2 bg-red-950 hover:bg-red-900 active:scale-95 text-red-200 rounded-sm font-mono text-[10px] md:text-xs tracking-wider uppercase transition-all border border-red-800 shadow-[0_0_10px_rgba(153,27,27,0.5)]">
+                    <button onClick={() => setMode('tactical')} className="flex items-center gap-2 px-3 py-2 bg-red-950 hover:bg-red-900 active:scale-95 text-red-200 rounded-sm stencil text-xs tracking-wider uppercase transition-all border border-red-800 shadow-md ">
                       <Swords size={16} /> <span className="hidden sm:inline">Tactical Mode</span>
                     </button>
                   )}
@@ -780,133 +1011,134 @@
                         const hasInjuries = char.injuries && char.injuries.length > 0;
 
                         return (
-                          <div key={char.id} className={`flex flex-col relative rounded-sm overflow-hidden border transition-all duration-200 ${isActuallyOut ? 'bg-stone-950 border-red-950/50 grayscale opacity-80' : char.overwatch ? 'bg-stone-900 border-amber-500/80 shadow-[inset_0_0_15px_rgba(245,158,11,0.1),0_0_10px_rgba(245,158,11,0.2)]' : 'bg-stone-900 border-stone-700 shadow-lg'}`}>
+                          <div key={char.id} className={`flex flex-col relative rounded-sm overflow-hidden border transition-all duration-200 hud-border ${isActuallyOut ? 'bg-black border-red-950/50 grayscale opacity-80 hud-border-danger' : char.overwatch ? 'bg-green-950/30 border-amber-500/80 shadow-md' : 'bg-green-950/30 border-green-800/80 shadow-lg'}`}>
                             {isActuallyOut && (
                               <div className="absolute inset-0 bg-red-950/30 z-20 flex flex-col items-center justify-center backdrop-blur-[2px]">
                                 <Skull size={48} className="text-red-600 mb-1 opacity-90 drop-shadow-md" />
-                                <span className="text-xl font-black font-mono text-red-600 tracking-widest uppercase outline-text bg-black/50 px-2 rounded text-center leading-tight">OUT OF ACTION</span>
+                                <span className="text-xl stencil text-red-600 tracking-widest uppercase outline-text bg-black/50 px-2 rounded text-center leading-tight ">OUT OF ACTION</span>
                               </div>
                             )}
                             
-                            <div className="flex-none p-2 bg-stone-950/80 border-b border-stone-800 flex justify-between items-center">
+                            <div className="flex-none p-2 bg-black/80 border-b border-green-900/80 flex justify-between items-center relative">
+                              <div className=" absolute bottom-0 left-0 w-full h-1 opacity-30"></div>
                               <div className="truncate pr-2">
-                                <h2 className="text-base font-bold text-stone-100 uppercase tracking-wide truncate">{char.name}</h2>
-                                <p className="text-[10px] font-mono text-stone-500 uppercase truncate">
+                                <h2 className="text-lg stencil text-green-200 uppercase tracking-wide truncate ">{char.name}</h2>
+                                <p className="text-[10px] font-mono text-green-600/80 uppercase truncate">
                                   Lvl {char.level} {char.type} <span className="text-red-700/80 mx-1">|</span> {char.keyword}
                                 </p>
                               </div>
                               <div className="flex items-center gap-1.5 flex-none">
                                 <button 
                                   onClick={() => toggleOOA(char.id)}
-                                  className={`p-2 rounded-sm border transition-all active:scale-95 ${isActuallyOut ? 'bg-red-600 border-red-500 text-white' : 'bg-stone-800 border-stone-700 text-stone-500 hover:text-red-500'}`}
+                                  className={`p-2 rounded-sm border transition-all active:scale-95 ${isActuallyOut ? 'bg-red-600 border-red-500 text-white' : 'bg-green-900/40 border-green-800/80 text-green-600/80 hover:text-red-500'}`}
                                   title="Toggle Out of Action Status"
                                 >
                                   <Skull size={14} />
                                 </button>
-                                <button onClick={() => !isActuallyOut && toggleOverwatch(char.id)} disabled={isActuallyOut} className={`flex items-center gap-1.5 px-3 py-2 rounded-sm font-mono text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 ${char.overwatch ? 'bg-amber-500/20 text-amber-500 border border-amber-500/50' : 'bg-stone-800 text-stone-500 border border-stone-700 hover:bg-stone-700 hover:text-stone-300'}`}>
+                                <button onClick={() => !isActuallyOut && toggleOverwatch(char.id)} disabled={isActuallyOut} className={`flex items-center gap-1.5 px-3 py-2 rounded-sm stencil text-xs uppercase tracking-wider transition-all active:scale-95  ${char.overwatch ? 'bg-amber-500/20 text-amber-500 border border-amber-500/50' : 'bg-green-900/40 text-green-600/80 border border-green-800/80 hover:bg-green-800/50 hover:text-green-400'}`}>
                                   <Crosshair size={14} className={char.overwatch ? 'animate-pulse' : ''} /> {char.overwatch ? 'Watching' : 'Overwatch'}
                                 </button>
                               </div>
                             </div>
 
-                            <div className="flex-none p-1.5 bg-stone-950">
+                            <div className="flex-none p-1.5 bg-black">
                               <div className="grid grid-cols-8 gap-0.5 text-center font-mono">
                                 {Object.entries(char.stats).map(([stat, val]) => (
-                                  <div key={stat} className="flex flex-col bg-stone-900/50 rounded-sm overflow-hidden border border-stone-800">
-                                    <span className="text-[8px] text-stone-500 font-bold bg-stone-950 py-0.5">{stat}</span>
-                                    <span className="text-xs font-bold text-stone-300 py-0.5">{val}</span>
+                                  <div key={stat} className="flex flex-col bg-green-950/30/50 rounded-sm overflow-hidden border border-green-900/80">
+                                    <span className="text-[10px] text-green-600/80 font-bold bg-black py-0.5 tracking-wider">{stat}</span>
+                                    <span className="text-base stencil text-green-400 py-0.5 ">{val}</span>
                                   </div>
                                 ))}
                               </div>
                             </div>
 
-                            <div className="flex-none grid grid-cols-3 gap-1.5 p-2 border-t border-stone-800 bg-stone-900/30">
+                            <div className="flex-none grid grid-cols-3 gap-1.5 p-2 border-t border-green-900/80 bg-green-950/30/30">
                               
-                              <div className="flex flex-col items-center bg-stone-950/50 border border-stone-800 rounded-sm p-1.5">
-                                <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-red-500 mb-1.5"><Heart size={12} /> DMG</div>
-                                <div className="flex items-center gap-2">
-                                  <button onClick={() => updateCharacterState(char.id, 'damage', -1)} className="w-8 h-8 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Minus size={16}/></button>
-                                  <span className={`text-xl font-mono font-black w-6 text-center leading-none ${char.damage > 0 ? 'text-red-500 drop-shadow-[0_0_3px_rgba(239,68,68,0.8)]' : 'text-stone-400'}`}>{char.damage}</span>
-                                  <button onClick={() => updateCharacterState(char.id, 'damage', 1)} className="w-8 h-8 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Plus size={16}/></button>
+                              <div className="flex flex-col items-center bg-black/50 border border-green-900/80 rounded-sm p-1.5">
+                                <div className="flex items-center gap-1 stencil text-[10px] tracking-wider text-red-500  mb-1.5"><Heart size={10} /> DMG</div>
+                                <div className="flex items-center gap-1">
+                                  <button onClick={() => updateCharacterState(char.id, 'damage', -1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Minus size={14}/></button>
+                                  <span className={`text-xl stencil w-5 text-center leading-none ${char.damage > 0 ? 'text-red-500 ' : 'text-green-500'}`}>{char.damage}</span>
+                                  <button onClick={() => updateCharacterState(char.id, 'damage', 1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Plus size={14}/></button>
                                 </div>
                               </div>
 
-                              <div className="flex flex-col items-center bg-stone-950/50 border border-stone-800 rounded-sm p-1.5 relative">
+                              <div className="flex flex-col items-center bg-black/50 border border-green-900/80 rounded-sm p-1.5 relative">
                                 <div className="flex items-center justify-center w-full relative mb-1.5">
-                                  <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-blue-400"><ShieldAlert size={12} /> AMMO</div>
-                                  <button onClick={() => updateCharacterState(char.id, 'ammo', -char.ammo)} className="absolute right-0 text-stone-600 hover:text-blue-400 active:scale-95 transition-all" title="Reset Ammo to 0"><RotateCcw size={12} /></button>
+                                  <div className="flex items-center gap-1 stencil text-[10px] tracking-wider text-blue-400 "><ShieldAlert size={10} /> AMMO</div>
+                                  <button onClick={() => updateCharacterState(char.id, 'ammo', -char.ammo)} className="absolute right-0 text-green-700/80 hover:text-blue-400 active:scale-95 transition-all" title="Reset Ammo to 0"><RotateCcw size={10} /></button>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  <button onClick={() => updateCharacterState(char.id, 'ammo', -1)} className="w-8 h-8 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Minus size={16}/></button>
-                                  <span className={`text-xl font-mono font-black w-6 text-center leading-none ${char.ammo > 0 ? 'text-blue-400 drop-shadow-[0_0_3px_rgba(96,165,250,0.8)]' : 'text-stone-400'}`}>{char.ammo}</span>
-                                  <button onClick={() => updateCharacterState(char.id, 'ammo', 1)} className="w-8 h-8 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Plus size={16}/></button>
+                                <div className="flex items-center gap-1">
+                                  <button onClick={() => updateCharacterState(char.id, 'ammo', -1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Minus size={14}/></button>
+                                  <span className={`text-xl stencil w-5 text-center leading-none ${char.ammo > 0 ? 'text-blue-400 ' : 'text-green-500'}`}>{char.ammo}</span>
+                                  <button onClick={() => updateCharacterState(char.id, 'ammo', 1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Plus size={14}/></button>
                                 </div>
                               </div>
 
-                              <div className="flex flex-col items-center bg-stone-950/50 border border-stone-800 rounded-sm p-1.5">
-                                <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-amber-500 mb-1.5"><Volume2 size={12} /> NOISE</div>
-                                <div className="flex items-center gap-2">
-                                  <button onClick={() => updateCharacterState(char.id, 'noise', -1)} className="w-8 h-8 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Minus size={16}/></button>
-                                  <span className={`text-xl font-mono font-black w-6 text-center leading-none ${char.noise > 0 ? 'text-amber-500 drop-shadow-[0_0_3px_rgba(245,158,11,0.8)]' : 'text-stone-400'}`}>{char.noise}</span>
-                                  <button onClick={() => updateCharacterState(char.id, 'noise', 1)} className="w-8 h-8 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Plus size={16}/></button>
+                              <div className="flex flex-col items-center bg-black/50 border border-green-900/80 rounded-sm p-1.5">
+                                <div className="flex items-center gap-1 stencil text-[10px] tracking-wider text-amber-500  mb-1.5"><Volume2 size={10} /> NOISE</div>
+                                <div className="flex items-center gap-1">
+                                  <button onClick={() => updateCharacterState(char.id, 'noise', -1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Minus size={14}/></button>
+                                  <span className={`text-xl stencil w-5 text-center leading-none ${char.noise > 0 ? 'text-amber-500 ' : 'text-green-500'}`}>{char.noise}</span>
+                                  <button onClick={() => updateCharacterState(char.id, 'noise', 1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Plus size={14}/></button>
                                 </div>
                               </div>
                             </div>
 
-                            <div className="flex-none grid grid-cols-3 gap-1.5 p-2 border-t border-stone-800 bg-stone-900/40">
-                              <div className="flex flex-col items-center bg-stone-950/50 border border-stone-800 rounded-sm p-1.5">
-                                <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-stone-400 mb-1.5"><Skull size={10} /> KILLS</div>
+                            <div className="flex-none grid grid-cols-3 gap-1.5 p-2 border-t border-green-900/80 bg-green-950/30/40">
+                              <div className="flex flex-col items-center bg-black/50 border border-green-900/80 rounded-sm p-1.5">
+                                <div className="flex items-center gap-1 stencil text-[10px] tracking-wider text-green-500  mb-1.5"><Skull size={10} /> KILLS</div>
                                 <div className="flex items-center gap-1">
-                                  <button onClick={() => updateCharacterState(char.id, 'kills', -1)} className="w-6 h-6 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Minus size={14}/></button>
-                                  <span className={`text-base font-mono font-black w-5 text-center leading-none ${char.kills > 0 ? 'text-red-500 drop-shadow-[0_0_3px_rgba(239,68,68,0.8)]' : 'text-stone-400'}`}>{char.kills || 0}</span>
-                                  <button onClick={() => updateCharacterState(char.id, 'kills', 1)} className="w-6 h-6 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Plus size={14}/></button>
+                                  <button onClick={() => updateCharacterState(char.id, 'kills', -1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Minus size={14}/></button>
+                                  <span className={`text-xl stencil w-5 text-center leading-none ${char.kills > 0 ? 'text-red-500 ' : 'text-green-500'}`}>{char.kills || 0}</span>
+                                  <button onClick={() => updateCharacterState(char.id, 'kills', 1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Plus size={14}/></button>
                                 </div>
                               </div>
-                              <div className="flex flex-col items-center bg-stone-950/50 border border-stone-800 rounded-sm p-1.5">
-                                <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-stone-400 mb-1.5"><Box size={10} /> STD LOOT</div>
+                              <div className="flex flex-col items-center bg-black/50 border border-green-900/80 rounded-sm p-1.5">
+                                <div className="flex items-center gap-1 stencil text-[10px] tracking-wider text-green-500  mb-1.5"><Box size={10} /> STD LOOT</div>
                                 <div className="flex items-center gap-1">
-                                  <button onClick={() => updateCharacterState(char.id, 'loot', -1)} className="w-6 h-6 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Minus size={14}/></button>
-                                  <span className={`text-base font-mono font-black w-5 text-center leading-none ${char.loot > 0 ? 'text-green-400 drop-shadow-[0_0_3px_rgba(74,222,128,0.8)]' : 'text-stone-400'}`}>{char.loot || 0}</span>
-                                  <button onClick={() => updateCharacterState(char.id, 'loot', 1)} className="w-6 h-6 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Plus size={14}/></button>
+                                  <button onClick={() => updateCharacterState(char.id, 'loot', -1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Minus size={14}/></button>
+                                  <span className={`text-xl stencil w-5 text-center leading-none ${char.loot > 0 ? 'text-green-400 ' : 'text-green-500'}`}>{char.loot || 0}</span>
+                                  <button onClick={() => updateCharacterState(char.id, 'loot', 1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Plus size={14}/></button>
                                 </div>
                               </div>
-                              <div className="flex flex-col items-center bg-stone-950/50 border border-stone-800 rounded-sm p-1.5">
-                                <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-stone-400 mb-1.5"><Weight size={10} /> HEAVY</div>
+                              <div className="flex flex-col items-center bg-black/50 border border-green-900/80 rounded-sm p-1.5">
+                                <div className="flex items-center gap-1 stencil text-[10px] tracking-wider text-green-500  mb-1.5"><Weight size={10} /> HEAVY</div>
                                 <div className="flex items-center gap-1">
-                                  <button onClick={() => updateCharacterState(char.id, 'heavyLoot', -1)} className="w-6 h-6 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Minus size={14}/></button>
-                                  <span className={`text-base font-mono font-black w-5 text-center leading-none ${char.heavyLoot > 0 ? 'text-amber-500 drop-shadow-[0_0_3px_rgba(245,158,11,0.8)]' : 'text-stone-400'}`}>{char.heavyLoot || 0}</span>
-                                  <button onClick={() => updateCharacterState(char.id, 'heavyLoot', 1)} className="w-6 h-6 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Plus size={14}/></button>
+                                  <button onClick={() => updateCharacterState(char.id, 'heavyLoot', -1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Minus size={14}/></button>
+                                  <span className={`text-xl stencil w-5 text-center leading-none ${char.heavyLoot > 0 ? 'text-amber-500 ' : 'text-green-500'}`}>{char.heavyLoot || 0}</span>
+                                  <button onClick={() => updateCharacterState(char.id, 'heavyLoot', 1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Plus size={14}/></button>
                                 </div>
                               </div>
                             </div>
                             
                             {(char.heavyLoot > 0 && !char.specialRules.includes("Heavy Lifter")) && (
-                              <div className="flex-none bg-amber-950/50 border-y border-amber-900 text-amber-500 text-[10px] font-mono font-bold text-center py-1.5 uppercase tracking-widest flex items-center justify-center gap-1.5 shadow-[inset_0_0_8px_rgba(245,158,11,0.2)]">
+                              <div className="flex-none bg-amber-950/50 border-y border-amber-900 text-amber-500 stencil text-xs text-center py-1.5 uppercase tracking-widest flex items-center justify-center gap-1.5 shadow-inner ">
                                 <AlertTriangle size={12} className="animate-pulse" /> Encumbered (Movement Penalty)
                               </div>
                             )}
 
-                            <div className="p-2 border-t border-stone-800 flex flex-col gap-2 flex-auto min-h-[100px]">
+                            <div className="p-2 border-t border-green-900/80 flex flex-col gap-2 flex-auto min-h-[100px]">
                               <div>
-                                <span className="text-[9px] font-mono text-stone-500 font-bold uppercase block mb-1">Hardware (Tap for info)</span>
+                                <span className="stencil uppercase tracking-wider text-[10px]  text-green-500 block mb-1">Hardware (Tap for info)</span>
                                 <div className="flex flex-wrap gap-1.5">
-                                  {char.equipment.length === 0 ? <span className="text-[10px] text-stone-600">Unarmed</span> : char.equipment.map((eq, i) => {
+                                  {char.equipment.length === 0 ? <span className="text-[10px] font-mono text-green-700/80 italic">Unarmed</span> : char.equipment.map((eq, i) => {
                                     const wp = WEAPON_DATA[eq];
                                     return (
                                       <div 
                                         key={i} 
                                         onClick={() => showNotify(TOOLTIPS[eq] || "No description available.")}
-                                        className="flex flex-col px-2 py-1 bg-stone-800 active:bg-stone-700 text-stone-300 rounded-sm border border-stone-700 cursor-pointer transition-colors"
+                                        className="flex flex-col px-2 py-1 bg-green-900/40 active:bg-green-800/50 text-green-400 rounded-sm border border-green-800/80 cursor-pointer transition-colors"
                                       >
-                                        <span className="text-[10px] font-bold truncate">{eq}</span>
+                                        <span className="text-[10px] stencil truncate ">{eq}</span>
                                         {wp && wp.type === 'Ranged' && (
-                                          <div className="text-[8px] text-blue-400 font-mono mt-0.5 font-bold leading-tight">
+                                          <div className="text-[10px] stencil text-blue-400 mt-0.5 tracking-wider leading-tight">
                                             <div>Rng: {wp.range}" | Hit: {Math.max(2, 7 - char.stats.FA - wp.fa)}+</div>
                                             <div>Ammo: {char.ammo}/{wp.cap}</div>
                                           </div>
                                         )}
                                         {wp && wp.type === 'Melee' && (
-                                          <div className="text-[8px] text-red-400 font-mono mt-0.5 font-bold leading-tight">
+                                          <div className="text-[10px] stencil text-red-400 mt-0.5 tracking-wider leading-tight">
                                             <div>CQC: 1D6+{char.stats.CQC + wp.cqc}</div>
                                             <div>Dmg: 1D6+{char.stats.S + wp.str}</div>
                                           </div>
@@ -917,13 +1149,13 @@
                                 </div>
                               </div>
                               <div>
-                                <span className="text-[9px] font-mono text-stone-500 font-bold uppercase block mb-1">Attributes (Tap for info)</span>
+                                <span className="stencil uppercase tracking-wider text-[10px]  text-green-500 block mb-1">Attributes (Tap for info)</span>
                                 <div className="flex flex-wrap gap-1.5">
                                   {char.specialRules.filter(r => r !== "None").map((rule, i) => (
                                     <button 
                                       key={`r-${i}`} 
                                       onClick={() => showNotify(TOOLTIPS[rule] || "No description available.")}
-                                      className="px-2 py-1 bg-red-950/30 active:bg-red-900/50 text-red-400 rounded-sm text-[10px] border border-red-900/30 truncate cursor-pointer transition-colors"
+                                      className="px-2 py-1 bg-red-950/30 active:bg-red-900/50 text-red-400 rounded-sm stencil text-[10px]  border border-red-900/30 truncate cursor-pointer transition-colors"
                                     >
                                       {rule}
                                     </button>
@@ -932,7 +1164,7 @@
                                     <button 
                                       key={`s-${i}`} 
                                       onClick={() => showNotify(TOOLTIPS[skill] || "No description available.")}
-                                      className="px-2 py-1 bg-green-950/30 active:bg-green-900/50 text-green-400 rounded-sm text-[10px] border border-green-900/30 truncate cursor-pointer transition-colors"
+                                      className="px-2 py-1 bg-green-950/30 active:bg-green-900/50 text-green-400 rounded-sm stencil text-[10px]  border border-green-900/30 truncate cursor-pointer transition-colors"
                                     >
                                       {skill}
                                     </button>
@@ -941,10 +1173,10 @@
                               </div>
                               {hasInjuries && (
                                 <div className="mt-1 pt-2 border-t border-red-900/20">
-                                  <span className="text-[9px] font-mono text-red-500 font-bold uppercase block mb-1">Sustained Injuries</span>
+                                  <span className="stencil uppercase tracking-wider text-[10px]  text-red-500 block mb-1">Sustained Injuries</span>
                                   <div className="flex flex-wrap gap-1.5">
                                     {char.injuries.map((inj, i) => (
-                                      <span key={i} className="px-2 py-1 bg-red-950 text-red-300 rounded-sm text-[10px] border border-red-900/50 truncate">
+                                      <span key={i} className="px-2 py-1 bg-red-950 text-red-300 rounded-sm stencil text-[10px]  border border-red-900/50 truncate">
                                         {inj}
                                       </span>
                                     ))}
@@ -960,55 +1192,56 @@
                 )}
 
                 {mode === 'base' && (
-                  <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-2 overflow-y-auto lg:overflow-hidden pb-4 lg:pb-0 min-h-full content-stretch">
+                  <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-2 overflow-y-auto lg:overflow-hidden pb-4 lg:pb-0">
                     
-                    <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-visible lg:overflow-y-auto custom-scrollbar border border-stone-800 bg-stone-900 rounded-sm p-3">
-                      <div className="flex items-center gap-2 mb-2 text-stone-400 border-b border-stone-800 pb-2">
-                        <Home size={18} /> <h2 className="font-bold uppercase tracking-wider text-sm">Refuge Network</h2>
+                    <div className="flex-none lg:flex-1 flex flex-col gap-2 min-h-[500px] lg:min-h-0 overflow-hidden custom-scrollbar border border-green-900/80 bg-green-950/30 rounded-sm p-3">
+                      <div className="flex items-center gap-2 mb-2 text-green-500 border-b border-green-900/80 pb-2 relative">
+                        <div className=" absolute bottom-0 left-0 w-full h-1 opacity-30"></div>
+                        <Home size={18} /> <h2 className="stencil uppercase tracking-wider text-sm ">Refuge Network</h2>
                       </div>
                       
                       <div className="mb-4">
-                        <label className="text-[10px] font-mono text-stone-500 uppercase block mb-1">Base Type</label>
+                        <label className="stencil uppercase tracking-wider text-sm  text-green-500 block mb-1">Base Type</label>
                         <select 
                           value={baseType} 
                           onChange={(e) => pushState({ baseType: e.target.value })}
-                          className="w-full bg-stone-950 border border-stone-700 text-stone-200 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 font-mono active:bg-stone-800"
+                          className="w-full bg-black border border-green-800/80 text-green-300 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 stencil tracking-wider active:bg-green-900/40"
                         >
                           {Object.keys(BASE_TYPES).map(type => <option key={type} value={type}>{type}</option>)}
                         </select>
                       </div>
 
                       <div className="grid grid-cols-3 gap-2 mb-4">
-                        <div className="bg-stone-950 border border-stone-800 p-2 rounded-sm text-center flex flex-col justify-center">
-                          <span className="text-[9px] font-mono text-stone-500 uppercase block">Capacity</span>
-                          <span className={`text-lg font-black font-mono mt-1 ${squad.length >= currentCapacity ? 'text-red-500' : 'text-stone-300'}`}>
+                        <div className="bg-black border border-green-900/80 p-2 rounded-sm text-center flex flex-col justify-center">
+                          <span className="stencil uppercase tracking-wider text-xs  text-green-500 block">Capacity</span>
+                          <span className={`text-xl stencil mt-1  ${squad.length >= currentCapacity ? 'text-red-500' : 'text-green-400'}`}>
                             {squad.length} / {currentCapacity}
                           </span>
                         </div>
-                        <div className="bg-stone-950 border border-stone-800 p-2 rounded-sm text-center flex flex-col justify-center">
-                          <span className="text-[9px] font-mono text-stone-500 uppercase block">Plots Used</span>
-                          <span className={`text-lg font-black font-mono mt-1 ${baseUpgrades.length >= baseDef.spaces ? 'text-amber-500' : 'text-stone-300'}`}>
+                        <div className="bg-black border border-green-900/80 p-2 rounded-sm text-center flex flex-col justify-center">
+                          <span className="stencil uppercase tracking-wider text-xs  text-green-500 block">Plots Used</span>
+                          <span className={`text-xl stencil mt-1  ${baseUpgrades.length >= baseDef.spaces ? 'text-amber-500' : 'text-green-400'}`}>
                             {baseUpgrades.length} / {baseDef.spaces}
                           </span>
                         </div>
-                        <div className="bg-stone-950 border border-stone-800 p-2 rounded-sm flex flex-col items-center justify-center">
-                          <span className="text-[9px] font-mono text-stone-500 uppercase block mb-1">Scavenge Pts</span>
+                        <div className="bg-black border border-green-900/80 p-2 rounded-sm flex flex-col items-center justify-center">
+                          <span className="stencil uppercase tracking-wider text-xs  text-green-500 block mb-1">Scavenge Pts</span>
                           <div className="flex items-center gap-1">
-                            <button onClick={() => pushState({ scavengePoints: Math.max(0, scavengePoints - 1) })} className="p-0.5 text-stone-500 hover:text-stone-300 active:scale-95 transition-all"><Minus size={14} /></button>
-                            <button onClick={handleSetSP} className="text-lg font-black font-mono text-green-400 hover:text-green-300 transition-colors w-8 text-center" title="Tap to enter amount">{scavengePoints}</button>
-                            <button onClick={() => pushState({ scavengePoints: scavengePoints + 1 })} className="p-0.5 text-stone-500 hover:text-stone-300 active:scale-95 transition-all"><Plus size={14} /></button>
+                            <button onClick={() => pushState({ scavengePoints: Math.max(0, scavengePoints - 1) })} className="p-0.5 text-green-600/80 hover:text-green-400 active:scale-95 transition-all"><Minus size={14} /></button>
+                            <button onClick={handleSetSP} className="text-2xl stencil text-green-400 hover:text-green-300 transition-colors w-8 text-center " title="Tap to enter amount">{scavengePoints}</button>
+                            <button onClick={() => pushState({ scavengePoints: scavengePoints + 1 })} className="p-0.5 text-green-600/80 hover:text-green-400 active:scale-95 transition-all"><Plus size={14} /></button>
                           </div>
                         </div>
                       </div>
 
                       <div className="mb-4">
-                        <span className="text-[10px] font-mono text-stone-500 uppercase block mb-1">Built-in Perks (Tap for info)</span>
+                        <span className="stencil uppercase tracking-wider text-sm  text-green-500 block mb-1">Built-in Perks (Tap for info)</span>
                         <div className="flex flex-wrap gap-1.5">
                           {baseDef.perks.map((p, i) => (
                             <button 
                               key={i} 
                               onClick={() => showNotify(TOOLTIPS[p] || "No description available.")}
-                              className="px-2 py-1 bg-stone-800 active:bg-stone-700 text-stone-400 text-[10px] border border-stone-700 rounded-sm cursor-pointer transition-colors text-left"
+                              className="px-2 py-1 bg-green-900/40 active:bg-green-800/50 text-green-500 text-[10px] border border-green-800/80 rounded-sm cursor-pointer transition-colors text-left"
                             >
                               {p}
                             </button>
@@ -1017,13 +1250,13 @@
                       </div>
 
                       <div className="flex-1 min-h-0 flex flex-col">
-                        <span className="text-[10px] font-mono text-stone-500 uppercase block mb-1">Constructed Upgrades (Tap for info)</span>
+                        <span className="stencil uppercase tracking-wider text-sm  text-green-500 block mb-1">Constructed Upgrades (Tap for info)</span>
                         <div className="flex flex-col gap-1.5 mb-2 overflow-y-auto custom-scrollbar flex-1">
-                          {baseUpgrades.length === 0 && <span className="text-xs text-stone-600 font-mono italic p-1">No upgrades built.</span>}
+                          {baseUpgrades.length === 0 && <span className="text-xs text-green-700/80 font-mono italic p-1">No upgrades built.</span>}
                           {baseUpgrades.map((upg, i) => (
-                            <div key={i} className="flex justify-between items-center bg-stone-950 border border-stone-800 pl-3 pr-2 py-2 rounded-sm active:bg-stone-900 transition-colors">
+                            <div key={i} className="flex justify-between items-center bg-black border border-green-900/80 pl-3 pr-2 py-2 rounded-sm active:bg-green-950/30 transition-colors">
                               <span 
-                                className="text-xs font-mono text-stone-300 cursor-pointer flex-1 truncate"
+                                className="text-sm stencil text-green-400 cursor-pointer flex-1 truncate "
                                 onClick={() => showNotify(TOOLTIPS[upg] || "No description available for this custom upgrade.")}
                               >
                                 {upg}
@@ -1032,12 +1265,12 @@
                             </div>
                           ))}
                         </div>
-                        <div className="flex gap-1.5 pt-2 border-t border-stone-800">
+                        <div className="flex gap-1.5 pt-2 border-t border-green-900/80">
                           <select 
                             value={newUpgrade} 
                             onChange={(e) => setNewUpgrade(e.target.value)} 
                             disabled={baseUpgrades.length >= baseDef.spaces}
-                            className="flex-1 bg-stone-950 border border-stone-700 text-stone-200 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 font-mono disabled:opacity-50 active:bg-stone-800"
+                            className="flex-1 bg-black border border-green-800/80 text-green-300 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 stencil tracking-wider disabled:opacity-50 active:bg-green-900/40"
                           >
                             <option value="" disabled>Select Upgrade...</option>
                             {UPGRADE_LIST.map(u => (
@@ -1045,20 +1278,79 @@
                                 key={u} 
                                 value={u} 
                                 disabled={scavengePoints < UPGRADE_DATA[u]} 
-                                className={scavengePoints < UPGRADE_DATA[u] ? "text-stone-600 bg-stone-900" : ""}
+                                className={scavengePoints < UPGRADE_DATA[u] ? "text-green-700/80 bg-green-950/30" : ""}
                               >
                                 {u} ({UPGRADE_DATA[u]} SP)
                               </option>
                             ))}
                           </select>
-                          <button onClick={handleAddBaseUpgrade} disabled={baseUpgrades.length >= baseDef.spaces} className="px-3 py-2 bg-stone-800 active:bg-stone-700 active:scale-95 border border-stone-700 rounded-sm text-stone-300 disabled:opacity-50 transition-all"><Plus size={16} /></button>
+                          <button onClick={handleAddBaseUpgrade} disabled={baseUpgrades.length >= baseDef.spaces} className="px-3 py-2 bg-green-900/40 active:bg-green-800/50 active:scale-95 border border-green-800/80 rounded-sm text-green-400 disabled:opacity-50 transition-all stencil "><Plus size={16} /></button>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 min-h-0 flex flex-col mt-4">
+                        <span className="stencil uppercase tracking-wider text-sm  text-green-500 block mb-1">Base Stash</span>
+                        <div className="flex flex-col gap-1.5 mb-2 overflow-y-auto custom-scrollbar flex-1">
+                          {stash.length === 0 && <span className="text-xs text-green-700/80 font-mono italic p-1">Stash is empty.</span>}
+                          {stash.map((item, i) => (
+                            <div key={i} className="flex justify-between items-center bg-black border border-green-900/80 pl-3 pr-2 py-2 rounded-sm active:bg-green-950/30 transition-colors">
+                              <span 
+                                className="text-sm stencil text-green-400 cursor-pointer flex-1 truncate "
+                                onClick={() => showNotify(TOOLTIPS[item] || "No description available.")}
+                              >
+                                {item}
+                              </span>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <select 
+                                  onChange={(e) => {
+                                    if(e.target.value) {
+                                      const charId = parseInt(e.target.value);
+                                      const newStash = [...stash];
+                                      newStash.splice(i, 1);
+                                      pushState({
+                                        squad: squad.map(c => c.id === charId ? { ...c, equipment: [...c.equipment, item] } : c),
+                                        stash: newStash
+                                      });
+                                    }
+                                  }}
+                                  className="bg-green-950/30 border border-green-800/80 text-green-500 text-[10px] rounded-sm p-1 focus:outline-none focus:border-red-800 stencil tracking-wider w-20"
+                                  value=""
+                                >
+                                  <option value="" disabled>Assign...</option>
+                                  {squad.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                </select>
+                                <button onClick={() => {
+                                  const newStash = [...stash];
+                                  newStash.splice(i, 1);
+                                  pushState({ stash: newStash });
+                                }} className="text-red-900 hover:text-red-500 active:scale-95 p-1 cursor-pointer transition-colors" title="Discard"><Trash2 size={14} /></button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex gap-1.5 pt-2 border-t border-green-900/80">
+                          <select 
+                            value={newStashEq} 
+                            onChange={(e) => setNewStashEq(e.target.value)} 
+                            className="flex-1 bg-black border border-green-800/80 text-green-300 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 stencil tracking-wider active:bg-green-900/40"
+                          >
+                            <option value="" disabled>Add to Stash...</option>
+                            {EQUIPMENT_LIST.map(eq => <option key={eq} value={eq}>{eq}</option>)}
+                          </select>
+                          <button onClick={() => {
+                            if(newStashEq) {
+                              pushState({ stash: [...stash, newStashEq] });
+                              setNewStashEq("");
+                            }
+                          }} className="px-3 py-2 bg-green-900/40 active:bg-green-800/50 active:scale-95 border border-green-800/80 rounded-sm text-green-400 transition-all stencil "><Plus size={16} /></button>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-visible lg:overflow-y-auto custom-scrollbar border border-stone-800 bg-stone-900 rounded-sm p-3">
-                      <div className="flex items-center gap-2 mb-2 text-stone-400 border-b border-stone-800 pb-2">
-                        <UserPlus size={18} /> <h2 className="font-bold uppercase tracking-wider text-sm">Squad Directory</h2>
+                    <div className="flex-none lg:flex-1 flex flex-col gap-2 min-h-[500px] lg:min-h-0 overflow-hidden custom-scrollbar border border-green-900/80 bg-green-950/30 rounded-sm p-3">
+                      <div className="flex items-center gap-2 mb-2 text-green-500 border-b border-green-900/80 pb-2 relative">
+                        <div className=" absolute bottom-0 left-0 w-full h-1 opacity-30"></div>
+                        <UserPlus size={18} /> <h2 className="stencil uppercase tracking-wider text-sm ">Squad Directory</h2>
                       </div>
                       
                       <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1.5 min-h-[150px]">
@@ -1068,11 +1360,11 @@
                             <button 
                               key={char.id} 
                               onClick={() => setSelectedCharId(char.id)}
-                              className={`text-left p-3 rounded-sm border transition-all flex justify-between items-center active:scale-[0.98] ${selectedCharId === char.id ? 'bg-red-950/40 border-red-800/50 shadow-[inset_0_0_10px_rgba(153,27,27,0.3)]' : 'bg-stone-950 border-stone-800 hover:border-stone-600'}`}
+                              className={`text-left p-3 rounded-sm border transition-all flex justify-between items-center active:scale-[0.98] ${selectedCharId === char.id ? 'bg-red-950/40 border-red-800/50 shadow-inner' : 'bg-black border-green-900/80 hover:border-green-700/80'}`}
                             >
                               <div>
-                                <div className="text-sm font-bold text-stone-200">{char.name}</div>
-                                <div className="text-[9px] font-mono text-stone-500 uppercase mt-0.5">
+                                <div className="text-base stencil text-green-300 ">{char.name}</div>
+                                <div className="text-[10px] stencil text-green-600/80 uppercase mt-0.5 tracking-wider">
                                   Lvl {char.level} {char.type}
                                   {char.recovering && <span className="ml-2 text-amber-500 font-bold">[RECOVERING]</span>}
                                   {isActuallyOut && !char.recovering && <span className="ml-2 text-red-500 font-bold">[O.O.A]</span>}
@@ -1084,69 +1376,70 @@
                         })}
                       </div>
 
-                      <div className="mt-2 pt-3 border-t border-stone-800 bg-stone-950 p-3 rounded-sm">
-                         <span className="text-[10px] font-mono text-stone-500 uppercase block mb-2">Recruit Survivor</span>
+                      <div className="mt-2 pt-3 border-t border-green-900/80 bg-black p-3 rounded-sm">
+                         <span className="stencil uppercase tracking-wider text-sm  text-green-500 block mb-2">Recruit Survivor</span>
                          <div className="flex flex-col gap-2">
-                           <input type="text" placeholder="Name" value={recruitName} onChange={e => setRecruitName(e.target.value)} className="w-full bg-stone-900 border border-stone-700 text-stone-200 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 font-mono" />
+                           <input type="text" placeholder="Name" value={recruitName} onChange={e => setRecruitName(e.target.value)} className="w-full bg-green-950/30 border border-green-800/80 text-green-300 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 stencil tracking-wider" />
                            <div className="flex gap-2">
-                             <select value={recruitKeyword} onChange={e => setRecruitKeyword(e.target.value)} className="w-1/3 bg-stone-900 border border-stone-700 text-stone-200 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 font-mono active:bg-stone-800">
+                             <select value={recruitKeyword} onChange={e => setRecruitKeyword(e.target.value)} className="w-1/3 bg-green-950/30 border border-green-800/80 text-green-300 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 stencil tracking-wider active:bg-green-900/40">
                                <option>Selfless</option>
                                <option>Neutral</option>
                                <option>Selfish</option>
                              </select>
-                             <select value={recruitType} onChange={e => setRecruitType(e.target.value)} className="flex-1 bg-stone-900 border border-stone-700 text-stone-200 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 font-mono active:bg-stone-800">
+                             <select value={recruitType} onChange={e => setRecruitType(e.target.value)} className="flex-1 bg-green-950/30 border border-green-800/80 text-green-300 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 stencil tracking-wider active:bg-green-900/40">
                                {Object.keys(CHARACTER_ARCHETYPES).map(t => <option key={t} value={t}>{t}</option>)}
                              </select>
-                             <button onClick={handleRecruit} className="px-4 py-2 bg-green-950 border border-green-800 text-green-400 active:bg-green-900 active:scale-95 rounded-sm font-mono text-sm uppercase transition-all"><Plus size={16} /></button>
+                             <button onClick={handleRecruit} className="px-4 py-2 bg-green-950 border border-green-800 text-green-400 active:bg-green-900 active:scale-95 rounded-sm stencil text-sm uppercase transition-all "><Plus size={16} /></button>
                            </div>
                          </div>
                       </div>
                     </div>
 
-                    <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-visible lg:overflow-y-auto custom-scrollbar border border-stone-800 bg-stone-900 rounded-sm p-3">
-                      <div className="flex items-center gap-2 mb-2 text-stone-400 border-b border-stone-800 pb-2">
-                        <Wrench size={18} /> <h2 className="font-bold uppercase tracking-wider text-sm">Character Lab</h2>
+                    <div className="flex-none lg:flex-1 flex flex-col gap-2 min-h-[500px] lg:min-h-0 overflow-hidden custom-scrollbar border border-green-900/80 bg-green-950/30 rounded-sm p-3">
+                      <div className="flex items-center gap-2 mb-2 text-green-500 border-b border-green-900/80 pb-2 relative">
+                        <div className=" absolute bottom-0 left-0 w-full h-1 opacity-30"></div>
+                        <Wrench size={18} /> <h2 className="stencil uppercase tracking-wider text-sm ">Character Lab</h2>
                       </div>
                       
                       {!selectedChar ? (
-                        <div className="flex-1 flex items-center justify-center text-stone-600 font-mono text-sm text-center p-4 min-h-[150px]">
+                        <div className="flex-1 flex items-center justify-center text-green-700/80 stencil text-sm text-center p-4 min-h-[150px] tracking-wider uppercase">
                           Select a character from the directory to manage their progression, upgrades, and injuries.
                         </div>
                       ) : (
                         <div className="flex flex-col gap-5 flex-1">
                           <div className="flex-none">
-                            <h3 className="text-xl font-black text-stone-100 uppercase tracking-wider">{selectedChar.name}</h3>
-                            <p className="text-[10px] font-mono text-stone-500 uppercase">{selectedChar.type} | {selectedChar.keyword}</p>
+                            <h3 className="text-2xl stencil text-green-200 uppercase tracking-wider ">{selectedChar.name}</h3>
+                            <p className="text-[10px] stencil text-green-600/80 uppercase tracking-wider">{selectedChar.type} | {selectedChar.keyword}</p>
                           </div>
 
-                          <div className="flex-none bg-stone-950 border border-stone-800 p-2 rounded-sm grid grid-cols-2 gap-2">
+                          <div className="flex-none bg-black border border-green-900/80 p-2 rounded-sm grid grid-cols-2 gap-2">
                             <div className="flex flex-col items-center">
-                              <span className="text-[10px] font-mono text-stone-500 font-bold uppercase mb-1">Experience (XP)</span>
+                              <span className="stencil uppercase tracking-wider text-xs  text-green-500 mb-1">Experience (XP)</span>
                               <div className="flex items-center gap-2">
-                                <button onClick={() => updateCharacterState(selectedChar.id, 'experience', -1)} className="p-1 text-stone-500 hover:text-stone-300 active:scale-95 transition-all"><Minus size={16} /></button>
-                                <span className="text-xl font-bold font-mono text-blue-400 w-8 text-center">{selectedChar.experience}</span>
-                                <button onClick={() => updateCharacterState(selectedChar.id, 'experience', 1)} className="p-1 text-stone-500 hover:text-stone-300 active:scale-95 transition-all"><Plus size={16} /></button>
+                                <button onClick={() => updateCharacterState(selectedChar.id, 'experience', -1)} className="p-1 text-green-600/80 hover:text-green-400 active:scale-95 transition-all"><Minus size={16} /></button>
+                                <span className="text-2xl stencil text-blue-400 w-8 text-center ">{selectedChar.experience}</span>
+                                <button onClick={() => updateCharacterState(selectedChar.id, 'experience', 1)} className="p-1 text-green-600/80 hover:text-green-400 active:scale-95 transition-all"><Plus size={16} /></button>
                               </div>
                             </div>
-                            <div className="flex flex-col items-center border-l border-stone-800">
-                              <span className="text-[10px] font-mono text-stone-500 font-bold uppercase mb-1">Level</span>
+                            <div className="flex flex-col items-center border-l border-green-900/80">
+                              <span className="stencil uppercase tracking-wider text-xs  text-green-500 mb-1">Level</span>
                               <div className="flex items-center gap-2">
-                                <button onClick={() => updateCharacterState(selectedChar.id, 'level', -1)} className="p-1 text-stone-500 hover:text-stone-300 active:scale-95 transition-all"><Minus size={16} /></button>
-                                <span className="text-xl font-bold font-mono text-amber-500 w-8 text-center">{selectedChar.level}</span>
-                                <button onClick={() => updateCharacterState(selectedChar.id, 'level', 1)} className="p-1 text-stone-500 hover:text-stone-300 active:scale-95 transition-all"><Plus size={16} /></button>
+                                <button onClick={() => updateCharacterState(selectedChar.id, 'level', -1)} className="p-1 text-green-600/80 hover:text-green-400 active:scale-95 transition-all"><Minus size={16} /></button>
+                                <span className="text-2xl stencil text-amber-500 w-8 text-center ">{selectedChar.level}</span>
+                                <button onClick={() => updateCharacterState(selectedChar.id, 'level', 1)} className="p-1 text-green-600/80 hover:text-green-400 active:scale-95 transition-all"><Plus size={16} /></button>
                               </div>
                             </div>
                           </div>
 
                           <div className="flex-none">
-                            <span className="text-[10px] font-mono text-stone-500 uppercase block mb-1">Permanent Stat Upgrades</span>
+                            <span className="stencil uppercase tracking-wider text-sm  text-green-500 block mb-1">Permanent Stat Upgrades</span>
                             <div className="grid grid-cols-4 gap-1.5">
                               {Object.entries(selectedChar.stats).map(([stat, val]) => (
-                                <div key={stat} className="bg-stone-950 border border-stone-800 rounded-sm flex flex-col items-center p-1.5">
-                                  <span className="text-[9px] font-mono text-stone-500 font-bold">{stat}</span>
+                                <div key={stat} className="bg-black border border-green-900/80 rounded-sm flex flex-col items-center p-1.5">
+                                  <span className="text-[10px] text-green-600/80 font-bold tracking-wider">{stat}</span>
                                   <div className="flex items-center gap-2 w-full justify-center mt-1">
-                                    <button onClick={() => permanentlyUpdateStat(selectedChar.id, stat, -1)} className="text-stone-600 active:text-stone-300 active:scale-95 p-1"><Minus size={12} /></button>
-                                    <span className="text-sm font-bold text-stone-200 w-4 text-center">{val}</span>
+                                    <button onClick={() => permanentlyUpdateStat(selectedChar.id, stat, -1)} className="text-green-700/80 active:text-green-400 active:scale-95 p-1"><Minus size={12} /></button>
+                                    <span className="text-lg stencil text-green-300 w-4 text-center ">{val}</span>
                                     <button onClick={() => permanentlyUpdateStat(selectedChar.id, stat, 1)} className="text-green-700 active:text-green-400 active:scale-95 p-1"><Plus size={12} /></button>
                                   </div>
                                 </div>
@@ -1156,32 +1449,32 @@
 
                           <div className="flex-none bg-red-950/20 border border-red-900/30 p-3 rounded-sm">
                             <div className="flex items-center gap-2 mb-2 text-red-500 border-b border-red-900/30 pb-1">
-                              <Activity size={14} /> <span className="text-[10px] font-mono font-bold uppercase block">Medical / Injury Log</span>
+                              <Activity size={14} /> <span className="stencil uppercase tracking-wider text-sm  block">Medical / Injury Log</span>
                             </div>
                             
                             <div className="flex flex-col gap-1.5 mb-3">
-                              {(!selectedChar.injuries || selectedChar.injuries.length === 0) && <span className="text-xs text-stone-600 font-mono italic p-1">No permanent injuries.</span>}
+                              {(!selectedChar.injuries || selectedChar.injuries.length === 0) && <span className="text-xs text-green-700/80 font-mono italic p-1">No permanent injuries.</span>}
                               {selectedChar.injuries && selectedChar.injuries.map((inj, i) => (
                                 <div key={i} className="flex justify-between items-center bg-red-950/40 border border-red-900/50 px-3 py-2 rounded-sm">
-                                  <span className="text-xs font-mono text-red-300 truncate">{inj}</span>
+                                  <span className="text-sm stencil text-red-300 truncate ">{inj}</span>
                                   <button onClick={() => removeInjuryLog(selectedChar.id, i)} className="text-red-700 active:text-red-400 ml-2 p-1" title="Remove Record"><Trash2 size={14} /></button>
                                 </div>
                               ))}
                             </div>
 
                             <div className="flex flex-col gap-2 mb-3">
-                               <span className="text-[10px] font-mono text-stone-500 uppercase">Apply Injury (Rules Pg. 39)</span>
+                               <span className="stencil uppercase tracking-wider text-sm  text-green-500">Apply Injury (Rules Pg. 39)</span>
                                <div className="flex gap-2">
                                  <select 
                                    value={selectedInjury} 
                                    onChange={e => setSelectedInjury(e.target.value)} 
-                                   className="flex-1 bg-stone-950 border border-red-900/50 text-stone-200 text-xs rounded-sm p-2 focus:outline-none focus:border-red-500 font-mono active:bg-stone-800"
+                                   className="flex-1 bg-black border border-red-900/50 text-green-300 text-xs rounded-sm p-2 focus:outline-none focus:border-red-500 stencil tracking-wider active:bg-green-900/40"
                                  >
                                    {INJURY_TABLE.map(inj => (
                                      <option key={inj.name} value={inj.name}>{inj.name} {inj.effect !== "NONE" && inj.effect !== "KIA" ? `(${inj.penalty} ${inj.effect})` : ''}</option>
                                    ))}
                                  </select>
-                                 <button onClick={() => applyInjury(selectedChar.id)} className="px-3 py-2 bg-red-950 border border-red-800 active:bg-red-900 active:scale-95 rounded-sm text-red-300 font-mono text-[10px] uppercase font-bold transition-all">Apply</button>
+                                 <button onClick={() => applyInjury(selectedChar.id)} className="px-3 py-2 bg-red-950 border border-red-800 active:bg-red-900 active:scale-95 rounded-sm text-red-300 stencil text-xs uppercase transition-all ">Apply</button>
                                </div>
                             </div>
 
@@ -1189,14 +1482,14 @@
                               {(selectedChar.ooaManual || selectedChar.damage >= selectedChar.stats.DC) && (
                                 <button 
                                   onClick={() => toggleOOA(selectedChar.id)}
-                                  className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-600 active:bg-red-700 text-white rounded-sm font-mono text-[10px] uppercase font-bold transition-all active:scale-95"
+                                  className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-600 active:bg-red-700 text-white rounded-sm stencil text-xs uppercase transition-all active:scale-95 "
                                 >
                                   <HeartPulse size={14} /> Clear Out of Action
                                 </button>
                               )}
                               <button 
                                 onClick={() => toggleRecovery(selectedChar.id)}
-                                className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-sm font-mono text-[10px] uppercase font-bold transition-all active:scale-95 ${selectedChar.recovering ? 'bg-amber-600 text-white' : 'bg-stone-800 text-stone-400 hover:text-amber-500'}`}
+                                className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-sm stencil text-xs uppercase transition-all active:scale-95 ${selectedChar.recovering ? 'bg-amber-600 text-white ' : 'bg-green-900/40 text-green-500 hover:text-amber-500'}`}
                               >
                                 <Activity size={14} /> {selectedChar.recovering ? 'Release from Recovery' : 'Send to Recovery (Miss Game)'}
                               </button>
@@ -1204,66 +1497,77 @@
                           </div>
 
                           <div className="flex-1 flex flex-col min-h-0">
-                             <span className="text-[10px] font-mono text-stone-500 uppercase block mb-1">Equipment Cache</span>
+                             <span className="stencil uppercase tracking-wider text-sm  text-green-500 block mb-1">Equipment Cache</span>
                              <div className="flex flex-col gap-1.5 mb-2 overflow-y-auto custom-scrollbar pr-1">
                                 {selectedChar.equipment.map((eq, i) => {
                                   const wp = WEAPON_DATA[eq];
                                   return (
-                                  <div key={i} className="flex justify-between items-center bg-stone-950 border border-stone-800 pl-3 pr-2 py-2 rounded-sm active:bg-stone-900 transition-colors">
+                                  <div key={i} className="flex justify-between items-center bg-black border border-green-900/80 pl-3 pr-2 py-2 rounded-sm active:bg-green-950/30 transition-colors">
                                     <div 
                                       className="flex flex-col cursor-pointer flex-1 pr-2"
                                       onClick={() => showNotify(TOOLTIPS[eq] || "No description available.")}
                                     >
-                                      <span className="text-xs font-mono text-stone-300 truncate">{eq}</span>
+                                      <span className="text-sm stencil text-green-400 truncate ">{eq}</span>
                                       {wp && wp.type === 'Ranged' && (
-                                        <span className="text-[8px] text-blue-400 font-mono mt-0.5 font-bold">
+                                        <span className="text-[10px] stencil text-blue-400 mt-0.5 tracking-wider">
                                           Rng: {wp.range}" | Hit: {Math.max(2, 7 - selectedChar.stats.FA - wp.fa)}+ | Ammo: {selectedChar.ammo}/{wp.cap}
                                         </span>
                                       )}
                                       {wp && wp.type === 'Melee' && (
-                                        <span className="text-[8px] text-red-400 font-mono mt-0.5 font-bold">
+                                        <span className="text-[10px] stencil text-red-400 mt-0.5 tracking-wider">
                                           CQC: 1D6+{selectedChar.stats.CQC + wp.cqc} | Dmg: 1D6+{selectedChar.stats.S + wp.str}
                                         </span>
                                       )}
                                     </div>
-                                    <button onClick={() => removeListAttribute(selectedChar.id, 'equipment', i)} className="text-stone-700 active:text-red-500 p-1 cursor-pointer shrink-0"><Trash2 size={14} /></button>
+                                    <div className="flex items-center gap-1 shrink-0">
+                                      <button onClick={() => {
+                                        const newStash = [...stash, eq];
+                                        const newEqs = [...selectedChar.equipment];
+                                        newEqs.splice(i, 1);
+                                        pushState({
+                                          squad: squad.map(c => c.id === selectedChar.id ? { ...c, equipment: newEqs } : c),
+                                          stash: newStash
+                                        });
+                                      }} className="text-green-600/80 hover:text-amber-500 active:scale-95 p-1 cursor-pointer transition-colors" title="Move to Stash"><Box size={14} /></button>
+                                      <button onClick={() => removeListAttribute(selectedChar.id, 'equipment', i)} className="text-green-800/80 hover:text-red-500 active:scale-95 p-1 cursor-pointer transition-colors" title="Discard"><Trash2 size={14} /></button>
+                                    </div>
                                   </div>
                                   )
                                 })}
                              </div>
-                             <div className="flex gap-2 pt-2 border-t border-stone-800">
-                                <select value={newEq} onChange={e => setNewEq(e.target.value)} className="flex-1 bg-stone-950 border border-stone-700 text-stone-200 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 font-mono active:bg-stone-800">
+                             <div className="flex gap-2 pt-2 border-t border-green-900/80">
+                                <select value={newEq} onChange={e => setNewEq(e.target.value)} className="flex-1 bg-black border border-green-800/80 text-green-300 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 stencil tracking-wider active:bg-green-900/40">
                                    <option value="" disabled>Select Equipment...</option>
                                    {EQUIPMENT_LIST.map(eq => <option key={eq} value={eq}>{eq}</option>)}
                                 </select>
-                                <button onClick={() => addListAttribute(selectedChar.id, 'equipment', newEq, setNewEq)} className="px-3 py-2 bg-stone-800 active:bg-stone-700 active:scale-95 border border-stone-700 rounded-sm text-stone-300 transition-all"><Plus size={16} /></button>
+                                <button onClick={() => addListAttribute(selectedChar.id, 'equipment', newEq, setNewEq)} className="px-3 py-2 bg-green-900/40 active:bg-green-800/50 active:scale-95 border border-green-800/80 rounded-sm text-green-400 transition-all stencil "><Plus size={16} /></button>
                              </div>
                           </div>
 
                           <div className="flex-1 flex flex-col min-h-0">
-                             <span className="text-[10px] font-mono text-stone-500 uppercase block mb-1">Learned Skills / Rules</span>
+                             <span className="stencil uppercase tracking-wider text-sm  text-green-500 block mb-1">Learned Skills / Rules</span>
                              <div className="flex flex-col gap-1.5 mb-2 overflow-y-auto custom-scrollbar pr-1">
                                 {[...selectedChar.specialRules, ...selectedChar.skills].filter(s => s !== "None").map((skill, i) => (
-                                  <div key={i} className="flex justify-between items-center bg-stone-950 border border-stone-800 pl-3 pr-2 py-2 rounded-sm active:bg-stone-900 transition-colors">
+                                  <div key={i} className="flex justify-between items-center bg-black border border-green-900/80 pl-3 pr-2 py-2 rounded-sm active:bg-green-950/30 transition-colors">
                                     <span 
-                                      className="text-xs font-mono text-stone-300 truncate cursor-pointer flex-1"
+                                      className="text-sm stencil text-green-400 truncate cursor-pointer flex-1 "
                                       onClick={() => showNotify(TOOLTIPS[skill] || "No description available.")}
                                     >{skill}</span>
-                                    {selectedChar.skills.includes(skill) && <button onClick={() => removeListAttribute(selectedChar.id, 'skills', selectedChar.skills.indexOf(skill))} className="text-stone-700 active:text-red-500 ml-2 p-1 cursor-pointer"><Trash2 size={14} /></button>}
+                                    {selectedChar.skills.includes(skill) && <button onClick={() => removeListAttribute(selectedChar.id, 'skills', selectedChar.skills.indexOf(skill))} className="text-green-800/80 active:text-red-500 ml-2 p-1 cursor-pointer"><Trash2 size={14} /></button>}
                                   </div>
                                 ))}
                              </div>
-                             <div className="flex gap-2 pt-2 border-t border-stone-800">
-                                <select value={newSkill} onChange={e => setNewSkill(e.target.value)} className="flex-1 bg-stone-950 border border-stone-700 text-stone-200 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 font-mono active:bg-stone-800">
+                             <div className="flex gap-2 pt-2 border-t border-green-900/80">
+                                <select value={newSkill} onChange={e => setNewSkill(e.target.value)} className="flex-1 bg-black border border-green-800/80 text-green-300 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 stencil tracking-wider active:bg-green-900/40">
                                    <option value="" disabled>Select Skill...</option>
                                    {SKILL_LIST.map(sk => <option key={sk} value={sk}>{sk}</option>)}
                                 </select>
-                                <button onClick={() => addListAttribute(selectedChar.id, 'skills', newSkill, setNewSkill)} className="px-3 py-2 bg-stone-800 active:bg-stone-700 active:scale-95 border border-stone-700 rounded-sm text-stone-300 transition-all"><Plus size={16} /></button>
+                                <button onClick={() => addListAttribute(selectedChar.id, 'skills', newSkill, setNewSkill)} className="px-3 py-2 bg-green-900/40 active:bg-green-800/50 active:scale-95 border border-green-800/80 rounded-sm text-green-400 transition-all stencil "><Plus size={16} /></button>
                              </div>
                           </div>
 
-                          <div className="flex-none mt-auto pt-4 border-t border-stone-800">
-                            <button onClick={() => handleRemoveCharacter(selectedChar.id)} className="w-full flex items-center justify-center gap-2 px-3 py-3 bg-red-950/30 border border-red-900/50 text-red-500 active:bg-red-900 active:text-white active:scale-95 rounded-sm font-mono text-xs uppercase tracking-wider transition-all">
+                          <div className="flex-none mt-auto pt-4 border-t border-green-900/80">
+                            <button onClick={() => handleRemoveCharacter(selectedChar.id)} className="w-full flex items-center justify-center gap-2 px-3 py-3 bg-red-950/30 border border-red-900/50 text-red-500 active:bg-red-900 active:text-white active:scale-95 rounded-sm stencil text-sm uppercase tracking-wider transition-all ">
                               <Skull size={16} /> Mark KIA / Exile
                             </button>
                           </div>
