@@ -586,7 +586,7 @@
                 
                 {mode === 'tactical' && (
                   <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1 pb-2">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 items-start">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 min-h-full">
                       {squad.map((char) => {
                         const isOut = char.damage >= char.stats.DC;
                         const hasInjuries = char.injuries && char.injuries.length > 0;
@@ -763,9 +763,9 @@
                 )}
 
                 {mode === 'base' && (
-                  <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-2 overflow-hidden">
+                  <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-2 overflow-y-auto lg:overflow-hidden pb-4 lg:pb-0">
                     
-                    <div className="w-full lg:w-1/3 flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-1 border border-stone-800 bg-stone-900 rounded-sm p-3 shrink-0">
+                    <div className="flex-none lg:flex-1 w-full lg:w-auto flex flex-col gap-2 lg:min-h-0 overflow-visible lg:overflow-y-auto custom-scrollbar border border-stone-800 bg-stone-900 rounded-sm p-3">
                       <div className="flex items-center gap-2 mb-2 text-stone-400 border-b border-stone-800 pb-2">
                         <Home size={18} /> <h2 className="font-bold uppercase tracking-wider text-sm">Refuge Network</h2>
                       </div>
@@ -859,7 +859,7 @@
                       </div>
                     </div>
 
-                    <div className="w-full lg:w-1/3 flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-1 border border-stone-800 bg-stone-900 rounded-sm p-3 shrink-0">
+                    <div className="flex-none lg:flex-1 w-full lg:w-auto flex flex-col gap-2 lg:min-h-0 overflow-visible lg:overflow-y-auto custom-scrollbar border border-stone-800 bg-stone-900 rounded-sm p-3">
                       <div className="flex items-center gap-2 mb-2 text-stone-400 border-b border-stone-800 pb-2">
                         <UserPlus size={18} /> <h2 className="font-bold uppercase tracking-wider text-sm">Squad Directory</h2>
                       </div>
@@ -906,7 +906,7 @@
                       </div>
                     </div>
 
-                    <div className="w-full lg:w-1/3 flex flex-col overflow-y-auto custom-scrollbar pr-1 border border-stone-800 bg-stone-900 rounded-sm p-3 shrink-0">
+                    <div className="flex-none lg:flex-1 w-full lg:w-auto flex flex-col gap-2 lg:min-h-0 overflow-visible lg:overflow-y-auto custom-scrollbar border border-stone-800 bg-stone-900 rounded-sm p-3">
                       <div className="flex items-center gap-2 mb-2 text-stone-400 border-b border-stone-800 pb-2">
                         <Wrench size={18} /> <h2 className="font-bold uppercase tracking-wider text-sm">Character Lab</h2>
                       </div>
@@ -916,7 +916,7 @@
                           Select a character from the directory to manage their progression, upgrades, and injuries.
                         </div>
                       ) : (
-                        <div className="flex flex-col gap-5">
+                        <div className="flex flex-col gap-5 flex-1">
                           <div>
                             <h3 className="text-xl font-black text-stone-100 uppercase tracking-wider">{selectedChar.name}</h3>
                             <p className="text-[10px] font-mono text-stone-500 uppercase">{selectedChar.type} | {selectedChar.keyword}</p>
@@ -1045,7 +1045,7 @@
                              </div>
                           </div>
 
-                          <div className="mt-4 pt-4 border-t border-stone-800">
+                          <div className="mt-auto pt-4 border-t border-stone-800">
                             <button onClick={() => handleRemoveCharacter(selectedChar.id)} className="w-full flex items-center justify-center gap-2 px-3 py-3 bg-red-950/30 border border-red-900/50 text-red-500 active:bg-red-900 active:text-white active:scale-95 rounded-sm font-mono text-xs uppercase tracking-wider transition-all">
                               <Skull size={16} /> Mark KIA / Exile
                             </button>
