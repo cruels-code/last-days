@@ -1,809 +1,1068 @@
-import React, { useState, useRef } from 'react';
-import { Crosshair, Plus, Minus, Heart, Volume2, ShieldAlert, Skull, Biohazard, Home, Swords, UserPlus, Wrench, Trash2, AlertTriangle, Download, Upload, Undo2, Redo2, Activity } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LD:ZA Squad Manager</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel for in-browser JSX compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-// Perfectly matched to Page 20 of the LD:ZA Rulebook
-const BASE_TYPES = {
-  "The Farm House": { capacity: 8, spaces: 6, perks: ["Fenced-Off Garden"] },
-  "The Mall": { capacity: 12, spaces: 8, perks: ["Store Room"] },
-  "The Gun Shop": { capacity: 6, spaces: 3, perks: ["Armoury", "Fortified Windows", "Reinforced Doors"] },
-  "The Police Station": { capacity: 8, spaces: 2, perks: ["Escape Vehicle", "Radio Room"] },
-  "The Church": { capacity: 8, spaces: 2, perks: ["Solid Structure", "Watch Tower"] },
-  "The Prison": { capacity: 10, spaces: 3, perks: ["Fences", "Infirmary"] }
-};
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(120, 113, 108, 0.5); border-radius: 2px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(168, 162, 158, 0.8); }
+    </style>
+</head>
+<body class="bg-stone-950 text-stone-300 font-sans h-screen w-screen overflow-hidden">
+    
+    <div id="root" class="h-full w-full"></div>
 
-const TOOLTIPS = {
-  // Roles & Rules
-  "Leader": "The Leader determines the group's Alignment (Selfless, Neutral, Selfish). If they die, a new leader must be chosen.",
-  "Heavy Lifter": "This character ignores the movement penalties associated with carrying Heavy objects/loot.",
-  "Entry Man": "Gains a +2 bonus to their Strength (S) characteristic when attempting to force open locked doors.",
-  "First Aid Training": "Allows the use of Medical Supplies to heal characters and prevent death during the campaign.",
-  "Inspirational Presence": "Friendly characters within 6 inches gain a +1 bonus to their Courage (C) tests.",
-  "None": "This character has no special innate abilities.",
-  
-  // Skills
-  "Firearms": "Proficient with ranged weapons. Allows access to advanced shooting techniques as they level up.",
-  "CQC": "Proficient in Close Quarters Combat. Allows access to advanced melee techniques as they level up.",
-  "Academic": "Highly educated. Better at scavenging specific locations and using complex items.",
-  "Athletic": "Physically fit. Can reroll failed jumping or climbing tests.",
-  
-  // Equipment
-  "Military Assault Rifle": "Ranged. Range: 24\", AP: 2, Damage: 1D6+4. High stopping power.",
-  "Heavy Blade": "Melee. AP: 2, Damage: 1D6+S. Two-handed weapon capable of decapitation.",
-  "Heavy Club": "Melee. AP: 2, Damage: 1D6+S. Causes Stun, reducing enemy AP.",
-  "Revolver": "Ranged. Range: 12\", AP: 1, Damage: 1D6+2. Reliable sidearm.",
-  "Surplus SMG": "Ranged. Range: 12\", AP: 2, Damage: 1D6+2. Capable of fully automatic fire.",
-  "Knife": "Melee. AP: 1, Damage: 1D6+S-1. Fast, short-range blade.",
-  "Hunting Rifle": "Ranged. Range: 36\", AP: 2, Damage: 1D6+3. Excellent at picking off targets from a Watchtower.",
-  "Club": "Melee. AP: 1, Damage: 1D6+S-1. Causes Stun.",
-  "Medical Supplies": "Item. Expendable. Used to treat wounds in the field or the refuge."
-};
+    <script type="text/babel">
+        const { useState, useRef } = React;
 
-const INJURY_TABLE = [
-  { name: "Dead", effect: "KIA", penalty: 0, desc: "Character is killed and removed from roster." },
-  { name: "Chest Wound", effect: "E", penalty: -1, desc: "Reduces Endurance by 1." },
-  { name: "Leg Wound", effect: "AP", penalty: -1, desc: "Reduces Action Points by 1." },
-  { name: "Shattered Arm", effect: "S", penalty: -1, desc: "Reduces Strength by 1." },
-  { name: "Head Wound", effect: "I", penalty: -1, desc: "Reduces Intelligence by 1." },
-  { name: "Psychological Trauma", effect: "C", penalty: -1, desc: "Reduces Courage by 1." },
-  { name: "Eye Injury", effect: "FA", penalty: -1, desc: "Reduces Firearms stat by 1." },
-  { name: "Deep Gash", effect: "CQC", penalty: -1, desc: "Reduces Close Quarters Combat stat by 1." },
-  { name: "Full Recovery", effect: "NONE", penalty: 0, desc: "Character heals perfectly. No stat penalties." }
-];
+        // --- INLINE ICONS ---
+        const Icon = ({ path, size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} dangerouslySetInnerHTML={{ __html: path }} />
+        );
+        const Crosshair = p => <Icon {...p} path='<circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/>' />;
+        const Plus = p => <Icon {...p} path='<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>' />;
+        const Minus = p => <Icon {...p} path='<line x1="5" y1="12" x2="19" y2="12"/>' />;
+        const Heart = p => <Icon {...p} path='<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>' />;
+        const Volume2 = p => <Icon {...p} path='<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>' />;
+        const ShieldAlert = p => <Icon {...p} path='<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>' />;
+        const Skull = p => <Icon {...p} path='<circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M8 20v2h8v-2"/><path d="m12.5 17-.5-1-.5 1h1z"/><path d="M16 20a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20"/>' />;
+        const Home = p => <Icon {...p} path='<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>' />;
+        const Swords = p => <Icon {...p} path='<polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="17" x2="4" y2="20"/><line x1="3" y1="19" x2="5" y2="21"/>' />;
+        const UserPlus = p => <Icon {...p} path='<path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>' />;
+        const Wrench = p => <Icon {...p} path='<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>' />;
+        const Trash2 = p => <Icon {...p} path='<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>' />;
+        const AlertTriangle = p => <Icon {...p} path='<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>' />;
+        const Download = p => <Icon {...p} path='<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>' />;
+        const Upload = p => <Icon {...p} path='<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>' />;
+        const Undo2 = p => <Icon {...p} path='<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/>' />;
+        const Redo2 = p => <Icon {...p} path='<path d="m15 14 5-5-5-5"/><path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5v0A5.5 5.5 0 0 0 9.5 20H13"/>' />;
+        const Activity = p => <Icon {...p} path='<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>' />;
+        const Box = p => <Icon {...p} path='<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>' />;
+        const Weight = p => <Icon {...p} path='<circle cx="12" cy="5" r="3"/><path d="M6.5 8a2 2 0 0 0-1.905 1.38L2.12 17.15A2 2 0 0 0 4.026 20h15.948a2 2 0 0 0 1.906-2.85l-2.476-7.77A2 2 0 0 0 17.5 8z"/>' />;
+        const RotateCcw = p => <Icon {...p} path='<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>' />;
 
-const initialSquad = [
-  {
-    id: 1, name: "Arthur", type: "The Everyday Hero", keyword: "Selfless",
-    stats: { AP: 6, CQC: 4, FA: 3, S: 3, E: 3, DC: 3, C: 4, I: 3 },
-    damage: 0, ammo: 0, noise: 0, overwatch: false,
-    equipment: ["Military Assault Rifle", "Heavy Blade"],
-    specialRules: ["Leader"], skills: ["Leader", "Firearms", "CQC", "Academic"], injuries: []
-  },
-  {
-    id: 2, name: "Callum", type: "Firefighter", keyword: "Selfless",
-    stats: { AP: 8, CQC: 3, FA: 3, S: 3, E: 3, DC: 3, C: 4, I: 3 },
-    damage: 0, ammo: 0, noise: 0, overwatch: false,
-    equipment: ["Heavy Club", "Revolver"],
-    specialRules: ["Heavy Lifter", "Entry Man"], skills: ["CQC", "Athletic"], injuries: []
-  },
-  {
-    id: 3, name: "Fiona", type: "Rescue Worker", keyword: "Selfless",
-    stats: { AP: 6, CQC: 3, FA: 3, S: 3, E: 3, DC: 3, C: 3, I: 3 },
-    damage: 0, ammo: 0, noise: 0, overwatch: false,
-    equipment: ["Surplus SMG", "Knife", "Medical Supplies"],
-    specialRules: ["First Aid Training"], skills: ["Academic", "Athletic"], injuries: []
-  },
-  {
-    id: 4, name: "Beatrice", type: "Good Samaritan", keyword: "Selfless",
-    stats: { AP: 6, CQC: 3, FA: 3, S: 3, E: 3, DC: 3, C: 3, I: 3 },
-    damage: 0, ammo: 0, noise: 0, overwatch: false,
-    equipment: ["Revolver", "Club", "Medical Supplies"],
-    specialRules: ["Inspirational Presence"], skills: ["CQC", "Academic"], injuries: []
-  },
-  {
-    id: 5, name: "Liam", type: "Survivor", keyword: "Neutral",
-    stats: { AP: 6, CQC: 3, FA: 3, S: 3, E: 3, DC: 3, C: 3, I: 3 },
-    damage: 0, ammo: 0, noise: 0, overwatch: false,
-    equipment: ["Hunting Rifle", "Knife"],
-    specialRules: ["None"], skills: ["Athletic", "CQC"], injuries: []
-  },
-  {
-    id: 6, name: "Gareth", type: "Tough Guy", keyword: "Neutral",
-    stats: { AP: 6, CQC: 4, FA: 3, S: 3, E: 3, DC: 3, C: 3, I: 3 },
-    damage: 0, ammo: 0, noise: 0, overwatch: false,
-    equipment: ["Heavy Club", "Revolver"],
-    specialRules: ["None"], skills: ["Athletic", "Firearms"], injuries: []
-  }
-];
+        // --- GAME DATA CONSTANTS ---
+        const BASE_TYPES = {
+          "The Farm House": { capacity: 8, spaces: 6, perks: ["Fenced-Off Garden"] },
+          "The Mall": { capacity: 12, spaces: 8, perks: ["Store Room"] },
+          "The Gun Shop": { capacity: 6, spaces: 3, perks: ["Armoury", "Fortified Windows", "Reinforced Doors"] },
+          "The Police Station": { capacity: 8, spaces: 2, perks: ["Escape Vehicle", "Radio Room"] },
+          "The Church": { capacity: 8, spaces: 2, perks: ["Solid Structure", "Watch Tower"] },
+          "The Prison": { capacity: 10, spaces: 3, perks: ["Fences", "Infirmary"] }
+        };
 
-export default function App() {
-  const [mode, setMode] = useState('tactical'); // 'tactical' or 'base'
-  const [squadName, setSquadName] = useState("The Devonshire Rippers");
-  
-  // --- History & State Management for Undo/Redo ---
-  const [history, setHistory] = useState([{
-    squad: initialSquad,
-    baseType: 'The Farm House',
-    baseUpgrades: []
-  }]);
-  const [historyIndex, setHistoryIndex] = useState(0);
+        const UPGRADE_DATA = {
+          "Barricades": 2,
+          "Water Catcher": 2,
+          "Bunk Beds": 3,
+          "Fences": 3,
+          "Store Room": 3,
+          "Armoury": 4,
+          "Infirmary": 4,
+          "Watchtower": 4,
+          "Workshop": 4,
+          "Generator": 5
+        };
 
-  // Derived current state variables
-  const currentData = history[historyIndex];
-  const squad = currentData.squad;
-  const baseType = currentData.baseType;
-  const baseUpgrades = currentData.baseUpgrades;
-  
-  // UI & System State
-  const [selectedCharId, setSelectedCharId] = useState(null);
-  const [notification, setNotification] = useState(null);
-  const [confirmDialog, setConfirmDialog] = useState(null);
-  const fileInputRef = useRef(null);
-  const notifTimeout = useRef(null);
+        const UPGRADE_LIST = Object.keys(UPGRADE_DATA);
 
-  // Form States
-  const [newUpgrade, setNewUpgrade] = useState("");
-  const [recruitName, setRecruitName] = useState("");
-  const [recruitType, setRecruitType] = useState("Survivor");
-  const [newEq, setNewEq] = useState("");
-  const [newSkill, setNewSkill] = useState("");
-  const [selectedInjury, setSelectedInjury] = useState("Chest Wound");
+        const WEAPON_DATA = {
+          "Handgun": { type: "Ranged", range: 12, fa: 1, str: 3, cap: "15" },
+          "Revolver": { type: "Ranged", range: 12, fa: 1, str: 4, cap: "6" },
+          "Shotgun": { type: "Ranged", range: 12, fa: 2, str: 4, cap: "6" },
+          "Surplus SMG": { type: "Ranged", range: 12, fa: 1, str: 3, cap: "30" },
+          "Modern SMG": { type: "Ranged", range: 16, fa: 1, str: 3, cap: "30" },
+          "Hunting Rifle": { type: "Ranged", range: 36, fa: 1, str: 4, cap: "5" },
+          "Military Assault Rifle": { type: "Ranged", range: 24, fa: 1, str: 4, cap: "30" },
+          "Bow": { type: "Ranged", range: 24, fa: 0, str: 3, cap: "1" },
+          "Crossbow": { type: "Ranged", range: 24, fa: 1, str: 4, cap: "1" },
+          "Thrown Weapon": { type: "Ranged", range: 8, fa: 0, str: 0, cap: "1" },
+          "Heavy Blade": { type: "Melee", cqc: 0, str: 2 },
+          "Heavy Club": { type: "Melee", cqc: 0, str: 2 },
+          "Knife": { type: "Melee", cqc: 0, str: 0 },
+          "Club": { type: "Melee", cqc: 0, str: 0 },
+          "Machete/Hatchet": { type: "Melee", cqc: 0, str: 1 },
+          "Chainsaw": { type: "Melee", cqc: 1, str: 3 },
+          "Reach Weapon": { type: "Melee", cqc: 0, str: 1 },
+          "Improvised Weapon": { type: "Melee", cqc: 0, str: 0 }
+        };
 
-  const showNotify = (msg) => {
-    if (notifTimeout.current) clearTimeout(notifTimeout.current);
-    setNotification(msg);
-    notifTimeout.current = setTimeout(() => setNotification(null), 4000);
-  };
+        const EQUIPMENT_LIST = Object.keys(WEAPON_DATA).concat(["Medical Supplies", "Flashlight", "Walkie Talkie", "Binoculars", "Kevlar Vest", "Riot Gear"]);
 
-  const pushState = (stateUpdates) => {
-    const nextState = { ...currentData, ...stateUpdates };
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(nextState);
-    if (newHistory.length > 50) newHistory.shift();
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-  };
+        const SKILL_LIST = [
+          "Leader", "Heavy Lifter", "Entry Man", "First Aid Training", "Inspirational Presence",
+          "Firearms", "CQC", "Academic", "Athletic", "Survival",
+          "Command", "Tactician", "Iron Will", "Negotiator", "Inspiring",
+          "Sniper", "Gunfighter", "Marksman", "Suppressive Fire", "Quick Draw",
+          "Brawler", "Martial Artist", "Bruiser", "Parry", "Berserker",
+          "Medic", "Engineer", "Scientist", "Instructor", "Investigator",
+          "Runner", "Climber", "Acrobat", "Dodger", "Tough",
+          "Stealth", "Scavenger", "Tracker", "Hunter", "Trapper"
+        ];
 
-  const handleUndo = () => { if (historyIndex > 0) setHistoryIndex(historyIndex - 1); };
-  const handleRedo = () => { if (historyIndex < history.length - 1) setHistoryIndex(historyIndex + 1); };
-
-  // --- Data Backup & Restore Logic ---
-  const handleExportBackup = () => {
-    const dataToSave = {
-      version: "1.2",
-      timestamp: new Date().toISOString(),
-      squadName, squad, baseType, baseUpgrades
-    };
-    const blob = new Blob([JSON.stringify(dataToSave, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${squadName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_backup.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    showNotify("Backup file downloaded successfully.");
-  };
-
-  const handleImportClick = () => {
-    setConfirmDialog({
-      message: "WARNING: Restoring a backup will completely overwrite your current roster and base progress. Proceed?",
-      onConfirm: () => { fileInputRef.current?.click(); setConfirmDialog(null); }
-    });
-  };
-
-  const handleFileImport = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const importedData = JSON.parse(e.target.result);
-        if (importedData.squad && importedData.baseType) {
-          const migratedSquad = importedData.squad.map(c => ({ ...c, injuries: c.injuries || [] }));
+        const TOOLTIPS = {
+          // Roles & Special Rules
+          "Leader": "Dictates the Group's Alignment. If killed, the model with the most Experience Points becomes the new Leader.",
+          "Heavy Lifter": "Ignores the Movement penalty for carrying Heavy Objects.",
+          "Entry Man": "Adds +2 to their Strength (S) characteristic when attempting to Force Doors.",
+          "First Aid Training": "May use Medical Supplies during the Scavenge Phase (1 AP, restore 1 DC) or Aftermath Phase (re-roll an Injury).",
+          "Inspirational Presence": "Friendly models within 6” may use this model’s Courage (C) characteristic instead of their own for Courage Tests.",
+          "None": "No special innate abilities.",
           
-          // Ensure older backups using 'Farmhouse' get migrated to 'The Farm House'
-          let migratedBaseType = importedData.baseType;
-          if (migratedBaseType === 'Farmhouse') migratedBaseType = 'The Farm House';
-          if (!BASE_TYPES[migratedBaseType]) migratedBaseType = 'The Farm House'; // Fallback
-
-          if (importedData.squadName) setSquadName(importedData.squadName);
-          pushState({
-            squad: migratedSquad,
-            baseType: migratedBaseType,
-            baseUpgrades: importedData.baseUpgrades || []
-          });
-          showNotify("Backup restored successfully. Welcome back.");
-          setMode('base');
-        } else {
-          showNotify("ERROR: Invalid or corrupted backup file format.");
-        }
-      } catch (error) {
-        showNotify("ERROR: Failed to parse the backup file.");
-      }
-    };
-    reader.readAsText(file);
-    event.target.value = '';
-  };
-
-  // --- Tactical Logic ---
-  const updateCharacterState = (id, field, delta) => {
-    pushState({
-      squad: squad.map(char => {
-        if (char.id === id) {
-          let newValue = char[field] + delta;
-          if (newValue < 0) newValue = 0;
-          if (field === 'damage' && newValue > char.stats.DC) newValue = char.stats.DC;
-          return { ...char, [field]: newValue };
-        }
-        return char;
-      })
-    });
-  };
-
-  const toggleOverwatch = (id) => {
-    pushState({ squad: squad.map(char => char.id === id ? { ...char, overwatch: !char.overwatch } : char) });
-  };
-
-  const resetTurnTrackers = () => {
-    setConfirmDialog({
-      message: "CRITICAL: Purge turn-based telemetry? (Clears Overwatch & Noise tokens for all members)",
-      onConfirm: () => {
-        pushState({ squad: squad.map(char => ({ ...char, noise: 0, overwatch: false })) });
-        setConfirmDialog(null);
-      }
-    });
-  };
-
-  // --- Base Management Logic ---
-  const handleAddBaseUpgrade = () => {
-    if (!newUpgrade.trim()) return;
-    if (baseUpgrades.length >= BASE_TYPES[baseType].spaces) {
-      showNotify("ERROR: No empty plots available in current Refuge!"); return;
-    }
-    pushState({ baseUpgrades: [...baseUpgrades, newUpgrade.trim()] });
-    setNewUpgrade("");
-  };
-
-  const handleRemoveBaseUpgrade = (index) => {
-    pushState({ baseUpgrades: baseUpgrades.filter((_, i) => i !== index) });
-  };
-
-  const handleRecruit = () => {
-    if (!recruitName.trim()) return;
-    if (squad.length >= BASE_TYPES[baseType].capacity) {
-      showNotify(`ERROR: Base at maximum capacity (${BASE_TYPES[baseType].capacity})!`); return;
-    }
-    const newChar = {
-      id: Date.now(), name: recruitName.trim(), type: recruitType, keyword: "Neutral",
-      stats: { AP: 6, CQC: 3, FA: 3, S: 3, E: 3, DC: 3, C: 3, I: 3 },
-      damage: 0, ammo: 0, noise: 0, overwatch: false,
-      equipment: [], specialRules: ["None"], skills: [], injuries: []
-    };
-    pushState({ squad: [...squad, newChar] });
-    setRecruitName("");
-    showNotify(`${newChar.name} added to the roster.`);
-  };
-
-  const handleRemoveCharacter = (id) => {
-    const char = squad.find(c => c.id === id);
-    setConfirmDialog({
-      message: `Permanently remove ${char.name} from the roster? (KIA/Exiled)`,
-      onConfirm: () => {
-        pushState({ squad: squad.filter(c => c.id !== id) });
-        if (selectedCharId === id) setSelectedCharId(null);
-        setConfirmDialog(null);
-      }
-    });
-  };
-
-  // --- Character Upgrade & Injury Logic ---
-  const permanentlyUpdateStat = (id, stat, delta) => {
-    pushState({
-      squad: squad.map(c => {
-        if (c.id === id) {
-          return { ...c, stats: { ...c.stats, [stat]: Math.max(1, c.stats[stat] + delta) } };
-        }
-        return c;
-      })
-    });
-  };
-
-  const addListAttribute = (id, listName, value, resetFn) => {
-    if (!value.trim()) return;
-    pushState({ squad: squad.map(c => c.id === id ? { ...c, [listName]: [...c[listName], value.trim()] } : c) });
-    resetFn("");
-  };
-
-  const removeListAttribute = (id, listName, index) => {
-    pushState({ squad: squad.map(c => c.id === id ? { ...c, [listName]: c[listName].filter((_, i) => i !== index) } : c) });
-  };
-
-  const applyInjury = (id) => {
-    const injuryDef = INJURY_TABLE.find(i => i.name === selectedInjury);
-    if (!injuryDef) return;
-
-    if (injuryDef.effect === "KIA") {
-      handleRemoveCharacter(id);
-      return;
-    }
-
-    pushState({
-      squad: squad.map(c => {
-        if (c.id === id) {
-          let updatedStats = { ...c.stats };
-          let updatedInjuries = [...(c.injuries || [])];
-
-          // Apply stat penalty if it affects a stat (minimum stat of 1)
-          if (injuryDef.effect !== "NONE") {
-            updatedStats[injuryDef.effect] = Math.max(1, updatedStats[injuryDef.effect] + injuryDef.penalty);
-          }
+          // Skill Trees
+          "Firearms": "Unlocks access to the Firearms Skill Tree.",
+          "CQC": "Unlocks access to the Close Quarters Combat Skill Tree.",
+          "Academic": "Unlocks access to the Academic Skill Tree.",
+          "Athletic": "Unlocks access to the Athletic Skill Tree.",
+          "Survival": "Unlocks access to the Survival Skill Tree.",
           
-          // Log the injury if it's not a full recovery
-          if (injuryDef.name !== "Full Recovery") {
-            updatedInjuries.push(injuryDef.name);
-          }
+          // Learned Skills
+          "Command": "Friendly models within 6” gain +1 Action Point.",
+          "Tactician": "Once per game, you may automatically win the Priority roll.",
+          "Iron Will": "This character is immune to the Fear special rule.",
+          "Negotiator": "Gain +1 to recruitment rolls in the Aftermath phase.",
+          "Inspiring": "Friendly models within Line of Sight gain +1 to Courage tests.",
+          "Sniper": "If this character does not move, they gain +1 to Firearms attacks.",
+          "Gunfighter": "May fire a Handgun or Revolver in Close Quarters Combat.",
+          "Marksman": "Ignores the penalty for shooting into cover.",
+          "Suppressive Fire": "Targets hit by this character lose 1 AP next turn instead of taking damage.",
+          "Quick Draw": "May shoot overwatch without spending an AP.",
+          "Brawler": "Unarmed attacks gain +1 Strength.",
+          "Martial Artist": "Gains +1 to CQC rolls when armed with a Knife or Unarmed.",
+          "Bruiser": "If this character charges, they gain +1 Strength for that attack.",
+          "Parry": "Forces an opponent to re-roll a successful CQC hit once per turn.",
+          "Berserker": "Gains +1 CQC for every enemy model in base contact after the first.",
+          "Medic": "When using Medical Supplies, restores 2 DC instead of 1.",
+          "Engineer": "May repair a jammed weapon or fix a destroyed door for 2 AP.",
+          "Scientist": "Generates 1 extra Scavenge Point if they survive the scenario.",
+          "Instructor": "May give 1 XP to another model in the Aftermath phase.",
+          "Investigator": "Rolls an extra D6 when searching for Scavenge Tokens.",
+          "Runner": "Adds +1 inch to their total Movement allowance.",
+          "Climber": "Ignores movement penalties for climbing obstacles.",
+          "Acrobat": "May jump across gaps of up to 3 inches without testing.",
+          "Dodger": "Gains a 6+ save against ranged Firearms attacks.",
+          "Tough": "Adds +1 to Endurance (E) characteristic.",
+          "Stealth": "Enemies must be within half range to target this model with Firearms.",
+          "Scavenger": "May carry an extra standard Scavenge Token without penalty.",
+          "Tracker": "Ignores movement penalties for difficult terrain.",
+          "Hunter": "Gains +1 to hit with Firearms against animal or infected animal targets.",
+          "Trapper": "May deploy a trap (D6 S3 hit) within 1 inch for 2 AP.",
 
-          return { ...c, stats: updatedStats, injuries: updatedInjuries };
-        }
-        return c;
-      })
-    });
-    showNotify(`Applied ${injuryDef.name} to character.`);
-  };
+          // Equipment 
+          "Handgun": "Ranged Weapon. Range: 12”, FA Modifier: +1, Strength: 3. Rules: Loud, Reliable. Ammo Capacity: 15.",
+          "Revolver": "Ranged Weapon. Range: 12”, FA Modifier: +1, Strength: 4. Rules: Loud, Reliable. Ammo Capacity: 6.",
+          "Shotgun": "Ranged Weapon. Range: 12”, FA Modifier: +2, Strength: 4. Rules: Loud, Scatter. Ammo Capacity: 6.",
+          "Surplus SMG": "Ranged Weapon. Range: 12”, FA Modifier: +1, Strength: 3. Rules: Loud, Full Auto. Ammo Capacity: 30.",
+          "Modern SMG": "Ranged Weapon. Range: 16”, FA Modifier: +1, Strength: 3. Rules: Loud, Full Auto. Ammo Capacity: 30.",
+          "Hunting Rifle": "Ranged Weapon. Range: 36”, FA Modifier: +1, Strength: 4. Rules: Loud. Ammo Capacity: 5.",
+          "Military Assault Rifle": "Ranged Weapon. Range: 24”, FA Modifier: +1, Strength: 4. Rules: Loud, Full Auto. Ammo Capacity: 30.",
+          "Bow": "Ranged Weapon. Range: 24”, FA Modifier: -, Strength: 3. Rules: Silent. Ammo Capacity: 1.",
+          "Crossbow": "Ranged Weapon. Range: 24”, FA Modifier: +1, Strength: 4. Rules: Silent, Reload. Ammo Capacity: 1.",
+          "Thrown Weapon": "Ranged Weapon. Range: 8”, FA Modifier: -, Strength: User. Rules: Silent, Thrown. Ammo Capacity: 1.",
+          "Heavy Blade": "Close Quarters Weapon. CQC Modifier: -, Strength: +2. Rules: Heavy, Slashing.",
+          "Heavy Club": "Close Quarters Weapon. CQC Modifier: -, Strength: +2. Rules: Heavy, Bludgeoning.",
+          "Knife": "Close Quarters Weapon. CQC Modifier: -, Strength: -. Rules: Fast.",
+          "Club": "Close Quarters Weapon. CQC Modifier: -, Strength: -. Rules: Bludgeoning.",
+          "Machete/Hatchet": "Close Quarters Weapon. CQC Modifier: -, Strength: +1. Rules: Slashing.",
+          "Chainsaw": "Close Quarters Weapon. CQC Modifier: +1, Strength: +3. Rules: Heavy, Slashing, Loud. Ammo Capacity: Gas Tank.",
+          "Reach Weapon": "Close Quarters Weapon. CQC Modifier: -, Strength: +1. Rules: Reach.",
+          "Improvised Weapon": "Close Quarters Weapon. CQC Modifier: -, Strength: -. Rules: Bludgeoning or Slashing, Cumbersome.",
+          "Medical Supplies": "Equipment. Used with First Aid Training to heal 1 Damage Point or re-roll a result on the Injury Table.",
+          "Flashlight": "Equipment. Removes the darkness penalty in Night scenarios.",
+          "Walkie Talkie": "Equipment. Extends the Leader's Inspirational Presence range to the entire board.",
+          "Binoculars": "Equipment. Grants +1 to finding items in the Scavenge Phase.",
+          "Kevlar Vest": "Equipment. Grants the wearer +1 Endurance against Firearms attacks.",
+          "Riot Gear": "Equipment. Grants the wearer +1 Endurance against Close Quarters Combat attacks.",
+          
+          // Refuge Perks & Upgrades
+          "Fenced-Off Garden": "Aftermath Phase: Roll a D6. On a 4+, generate 1 Scavenge Point.",
+          "Store Room": "Aftermath Phase: Roll a D6. On a 5+, generate 1 Scavenge Point.",
+          "Armoury": "Pre-Game Phase: Distribute D3 Ammo Tokens among the group for free.",
+          "Fortified Windows": "Enemies shooting at targets inside the Refuge suffer an additional -1 to their Firearms tests.",
+          "Reinforced Doors": "Doors to the Refuge have an Endurance of 5 and a Damage Capacity of 3.",
+          "Escape Vehicle": "When retreating from a Scenario, roll a D6 per model. On a 4+ they do not drop their Scavenge tokens.",
+          "Radio Room": "Aftermath Phase: Add +1 to your rolls when attempting to recruit new members.",
+          "Solid Structure": "The building is extremely durable. All structural points have +1 Endurance.",
+          "Watch Tower": "In-Game: 1 model placed here gains Line of Sight to the entire board and +1 to Firearms tests.",
+          "Watchtower": "In-Game: 1 model placed here gains Line of Sight to the entire board and +1 to Firearms tests.",
+          "Fences": "Zombies cannot enter the Refuge until they have destroyed the fences (Endurance 4, DC 2).",
+          "Infirmary": "Aftermath Phase: You may re-roll one result on the Injury Table.",
+          "Bunk Beds": "Increases the Maximum Group Size of the Refuge by +2.",
+          "Barricades": "Creates a defensive barrier. Enemies must spend 1 extra AP to cross.",
+          "Generator": "Provides power to the Refuge. Required for certain advanced upgrades.",
+          "Workshop": "Allows the group to repair weapons. Re-roll failed tests when fixing jammed firearms.",
+          "Water Catcher": "Aftermath Phase: Roll a D6. On a 5+, generate 1 Scavenge Point."
+        };
 
-  const removeInjuryLog = (charId, injuryIndex) => {
-    pushState({
-      squad: squad.map(c => {
-        if (c.id === charId) {
-          const newInjuries = c.injuries.filter((_, i) => i !== injuryIndex);
-          return { ...c, injuries: newInjuries };
-        }
-        return c;
-      })
-    });
-  };
+        const INJURY_TABLE = [
+          { name: "Dead", effect: "KIA", penalty: 0, desc: "Character is killed and their equipment is placed in the Stash." },
+          { name: "Chest Wound", effect: "E", penalty: -1, desc: "Permanent -1 penalty to Endurance (E)." },
+          { name: "Leg Wound", effect: "AP", penalty: -1, desc: "Permanent -1 penalty to Action Points (AP)." },
+          { name: "Shattered Arm", effect: "S", penalty: -1, desc: "Permanent -1 penalty to Strength (S)." },
+          { name: "Head Wound", effect: "I", penalty: -1, desc: "Permanent -1 penalty to Intelligence (I)." },
+          { name: "Psychological Trauma", effect: "C", penalty: -1, desc: "Permanent -1 penalty to Courage (C)." },
+          { name: "Eye Injury", effect: "FA", penalty: -1, desc: "Permanent -1 penalty to Firearms (FA)." },
+          { name: "Deep Gash", effect: "CQC", penalty: -1, desc: "Permanent -1 penalty to Close Quarters Combat (CQC)." },
+          { name: "Full Recovery", effect: "NONE", penalty: 0, desc: "Character makes a full recovery. No permanent stat penalties." }
+        ];
 
-  const selectedChar = squad.find(c => c.id === selectedCharId);
-  const baseDef = BASE_TYPES[baseType];
+        const initialSquad = [
+          { id: 1, name: "Arthur", type: "The Everyday Hero", keyword: "Selfless", level: 0, experience: 0, stats: { AP: 6, CQC: 4, FA: 3, S: 3, E: 3, DC: 3, C: 4, I: 3 }, damage: 0, ammo: 0, noise: 0, overwatch: false, loot: 0, heavyLoot: 0, kills: 0, equipment: ["Military Assault Rifle", "Heavy Blade"], specialRules: ["Leader"], skills: ["Leader", "Firearms", "CQC", "Academic"], injuries: [] },
+          { id: 2, name: "Callum", type: "Firefighter", keyword: "Selfless", level: 0, experience: 0, stats: { AP: 8, CQC: 3, FA: 3, S: 3, E: 3, DC: 3, C: 4, I: 3 }, damage: 0, ammo: 0, noise: 0, overwatch: false, loot: 0, heavyLoot: 0, kills: 0, equipment: ["Heavy Club", "Revolver"], specialRules: ["Heavy Lifter", "Entry Man"], skills: ["CQC", "Athletic"], injuries: [] },
+          { id: 3, name: "Fiona", type: "Rescue Worker", keyword: "Selfless", level: 0, experience: 0, stats: { AP: 6, CQC: 3, FA: 3, S: 3, E: 3, DC: 3, C: 3, I: 3 }, damage: 0, ammo: 0, noise: 0, overwatch: false, loot: 0, heavyLoot: 0, kills: 0, equipment: ["Surplus SMG", "Knife", "Medical Supplies"], specialRules: ["First Aid Training"], skills: ["Academic", "Athletic"], injuries: [] },
+          { id: 4, name: "Beatrice", type: "Good Samaritan", keyword: "Selfless", level: 0, experience: 0, stats: { AP: 6, CQC: 3, FA: 3, S: 3, E: 3, DC: 3, C: 3, I: 3 }, damage: 0, ammo: 0, noise: 0, overwatch: false, loot: 0, heavyLoot: 0, kills: 0, equipment: ["Revolver", "Club", "Medical Supplies"], specialRules: ["Inspirational Presence"], skills: ["CQC", "Academic"], injuries: [] },
+          { id: 5, name: "Liam", type: "Survivor", keyword: "Neutral", level: 0, experience: 0, stats: { AP: 6, CQC: 3, FA: 3, S: 3, E: 3, DC: 3, C: 3, I: 3 }, damage: 0, ammo: 0, noise: 0, overwatch: false, loot: 0, heavyLoot: 0, kills: 0, equipment: ["Hunting Rifle", "Knife"], specialRules: ["None"], skills: ["Athletic", "CQC"], injuries: [] },
+          { id: 6, name: "Gareth", type: "Tough Guy", keyword: "Neutral", level: 0, experience: 0, stats: { AP: 6, CQC: 4, FA: 3, S: 3, E: 3, DC: 3, C: 3, I: 3 }, damage: 0, ammo: 0, noise: 0, overwatch: false, loot: 0, heavyLoot: 0, kills: 0, equipment: ["Heavy Club", "Revolver"], specialRules: ["None"], skills: ["Athletic", "Firearms"], injuries: [] }
+        ];
 
-  return (
-    <div className="h-screen w-screen bg-stone-950 text-stone-300 font-sans overflow-hidden flex flex-col relative selection:bg-red-900 selection:text-white">
-      {/* Background Grime Overlay */}
-      <div className="absolute inset-0 pointer-events-none opacity-30 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-stone-950 to-black z-0"></div>
-      
-      {/* Hidden File Input for Restoring */}
-      <input type="file" accept=".json" ref={fileInputRef} onChange={handleFileImport} style={{ display: 'none' }} />
+        // --- MAIN APPLICATION ---
+        function App() {
+          const [mode, setMode] = useState('tactical');
+          const [squadName, setSquadName] = useState("The Devonshire Rippers");
+          
+          const [history, setHistory] = useState([{
+            squad: initialSquad,
+            baseType: 'The Farm House',
+            baseUpgrades: [],
+            scavengePoints: 0
+          }]);
+          const [historyIndex, setHistoryIndex] = useState(0);
 
-      {/* Notifications & Modals */}
-      {notification && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-amber-500 text-stone-950 px-4 py-2 rounded-md font-bold font-mono text-sm shadow-[0_0_20px_rgba(245,158,11,0.6)] flex items-center gap-2 max-w-[90vw] text-center transition-all animate-in slide-in-from-top-4">
-          <AlertTriangle size={18} className="shrink-0" /> 
-          <span className="leading-tight">{notification}</span>
-        </div>
-      )}
-      {confirmDialog && (
-        <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center backdrop-blur-sm p-4">
-          <div className="bg-stone-900 border border-red-900 p-6 rounded-sm max-w-md w-full shadow-[0_0_30px_rgba(220,38,38,0.3)]">
-            <div className="flex items-center gap-3 text-red-500 mb-4">
-              <AlertTriangle size={24} />
-              <h3 className="text-lg font-black uppercase tracking-wider">Confirm Action</h3>
-            </div>
-            <p className="font-mono text-sm text-stone-300 mb-6">{confirmDialog.message}</p>
-            <div className="flex gap-3 justify-end">
-              <button onClick={() => setConfirmDialog(null)} className="px-4 py-3 border border-stone-600 text-stone-400 hover:bg-stone-800 active:bg-stone-700 active:scale-95 rounded-sm font-mono text-xs uppercase transition-all">Cancel</button>
-              <button onClick={confirmDialog.onConfirm} className="px-4 py-3 bg-red-950 border border-red-800 text-red-400 hover:bg-red-900 hover:text-white active:bg-red-800 active:scale-95 rounded-sm font-mono text-xs uppercase transition-all">Confirm Execute</button>
-            </div>
-          </div>
-        </div>
-      )}
+          const currentData = history[historyIndex];
+          const squad = currentData.squad;
+          const baseType = currentData.baseType;
+          const baseUpgrades = currentData.baseUpgrades;
+          const scavengePoints = currentData.scavengePoints;
+          
+          const [selectedCharId, setSelectedCharId] = useState(null);
+          const [notification, setNotification] = useState(null);
+          const [confirmDialog, setConfirmDialog] = useState(null);
+          const fileInputRef = useRef(null);
+          const notifTimeout = useRef(null);
 
-      {/* Main Header */}
-      <header className="flex-none p-2 md:p-3 border-b-2 border-red-900/40 bg-stone-900/80 shadow-[0_4px_20px_rgba(0,0,0,0.7)] z-10 flex flex-wrap justify-between items-center gap-2">
-        <div className="flex items-center gap-3 flex-1 min-w-0 pr-2">
-          <Biohazard className="text-red-600 animate-pulse shrink-0" size={28} />
-          <div className="flex-1 min-w-0">
-            <input 
-              type="text"
-              value={squadName}
-              onChange={(e) => setSquadName(e.target.value)}
-              className="w-full bg-transparent border-b border-transparent hover:border-red-900/50 focus:border-red-600 focus:outline-none text-xl md:text-2xl font-black text-red-600 tracking-widest uppercase drop-shadow-[0_0_8px_rgba(220,38,38,0.5)] transition-colors truncate"
-              placeholder="ENTER SQUAD NAME"
-            />
-            <p className="text-[10px] md:text-xs font-mono text-stone-500 uppercase tracking-widest hidden sm:block truncate">
-              LD:ZA // {mode === 'tactical' ? 'Combat Tactical Roster' : 'Base Management System'}
-            </p>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="flex border-r border-stone-700 pr-2 mr-1 gap-1">
-            <button onClick={handleUndo} disabled={historyIndex === 0} title="Undo Action" className="flex items-center justify-center p-2 bg-stone-950 hover:bg-stone-800 active:bg-stone-700 active:scale-95 disabled:opacity-30 disabled:active:scale-100 text-stone-400 rounded-sm font-mono text-[10px] border border-stone-800 transition-all">
-              <Undo2 size={16} />
-            </button>
-            <button onClick={handleRedo} disabled={historyIndex === history.length - 1} title="Redo Action" className="flex items-center justify-center p-2 bg-stone-950 hover:bg-stone-800 active:bg-stone-700 active:scale-95 disabled:opacity-30 disabled:active:scale-100 text-stone-400 rounded-sm font-mono text-[10px] border border-stone-800 transition-all">
-              <Redo2 size={16} />
-            </button>
-          </div>
+          const [newUpgrade, setNewUpgrade] = useState("");
+          const [recruitName, setRecruitName] = useState("");
+          const [recruitType, setRecruitType] = useState("Survivor");
+          const [recruitKeyword, setRecruitKeyword] = useState("Neutral");
+          const [newEq, setNewEq] = useState("");
+          const [newSkill, setNewSkill] = useState("");
+          const [selectedInjury, setSelectedInjury] = useState("Chest Wound");
 
-          <div className="flex border-r border-stone-700 pr-2 mr-1 gap-1">
-            <button onClick={handleExportBackup} title="Backup Data" className="flex items-center justify-center px-2 py-2 md:py-1.5 bg-stone-950 hover:bg-stone-800 active:scale-95 text-stone-400 rounded-sm font-mono text-[10px] border border-stone-800 transition-all">
-              <Download size={16} className="lg:mr-1" /> <span className="hidden lg:inline uppercase">Backup</span>
-            </button>
-            <button onClick={handleImportClick} title="Restore Data" className="flex items-center justify-center px-2 py-2 md:py-1.5 bg-stone-950 hover:bg-stone-800 active:scale-95 text-stone-400 rounded-sm font-mono text-[10px] border border-stone-800 transition-all">
-              <Upload size={16} className="lg:mr-1" /> <span className="hidden lg:inline uppercase">Restore</span>
-            </button>
-          </div>
+          // Derived constants for rules calculations
+          const baseDef = BASE_TYPES[baseType] || BASE_TYPES["The Farm House"];
+          const currentCapacity = baseDef.capacity + (baseUpgrades.filter(u => u === "Bunk Beds").length * 2);
 
-          {mode === 'tactical' ? (
-            <>
-              <button onClick={resetTurnTrackers} className="flex items-center gap-2 px-3 py-2 bg-stone-950 hover:bg-red-950 active:scale-95 text-stone-400 hover:text-red-400 rounded-sm font-mono text-[10px] md:text-xs tracking-wider uppercase transition-all border border-stone-800 shadow-sm">
-                <Crosshair size={16} /> <span className="hidden sm:inline">End Turn</span>
-              </button>
-              <button onClick={() => setMode('base')} className="flex items-center gap-2 px-3 py-2 bg-stone-800 hover:bg-stone-700 active:scale-95 text-stone-200 rounded-sm font-mono text-[10px] md:text-xs tracking-wider uppercase transition-all border border-stone-600 shadow-sm">
-                <Home size={16} /> <span className="hidden sm:inline">Base MGT</span>
-              </button>
-            </>
-          ) : (
-            <button onClick={() => setMode('tactical')} className="flex items-center gap-2 px-3 py-2 bg-red-950 hover:bg-red-900 active:scale-95 text-red-200 rounded-sm font-mono text-[10px] md:text-xs tracking-wider uppercase transition-all border border-red-800 shadow-[0_0_10px_rgba(153,27,27,0.5)]">
-              <Swords size={16} /> <span className="hidden sm:inline">Tactical Mode</span>
-            </button>
-          )}
-        </div>
-      </header>
+          const showNotify = (msg) => {
+            if (notifTimeout.current) clearTimeout(notifTimeout.current);
+            setNotification(msg);
+            notifTimeout.current = setTimeout(() => setNotification(null), 4000);
+          };
 
-      {/* --- CONTENT AREA --- */}
-      <main className="flex-1 min-h-0 p-2 z-10 flex flex-col">
-        
-        {mode === 'tactical' && (
-          /* Wrap the grid in an overflow-y container so the cards are allowed to expand */
-          <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1 pb-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 items-start">
-              {squad.map((char) => {
-                const isOut = char.damage >= char.stats.DC;
-                const hasInjuries = char.injuries && char.injuries.length > 0;
+          const pushState = (stateUpdates) => {
+            const nextState = { ...currentData, ...stateUpdates };
+            const newHistory = history.slice(0, historyIndex + 1);
+            newHistory.push(nextState);
+            if (newHistory.length > 50) newHistory.shift();
+            setHistory(newHistory);
+            setHistoryIndex(newHistory.length - 1);
+          };
 
-                return (
-                  <div key={char.id} className={`flex flex-col relative rounded-sm overflow-hidden border transition-all duration-200 ${isOut ? 'bg-stone-950 border-red-950/50 grayscale opacity-80' : char.overwatch ? 'bg-stone-900 border-amber-500/80 shadow-[inset_0_0_15px_rgba(245,158,11,0.1),0_0_10px_rgba(245,158,11,0.2)]' : 'bg-stone-900 border-stone-700 shadow-lg'}`}>
-                    {isOut && (
-                      <div className="absolute inset-0 bg-red-950/30 z-20 flex flex-col items-center justify-center backdrop-blur-[2px]">
-                        <Skull size={48} className="text-red-600 mb-1 opacity-90 drop-shadow-md" />
-                        <span className="text-xl font-black font-mono text-red-600 tracking-widest uppercase outline-text bg-black/50 px-2 rounded">K.I.A / O.O.A</span>
-                      </div>
-                    )}
-                    
-                    {/* Card Header */}
-                    <div className="flex-none p-2 bg-stone-950/80 border-b border-stone-800 flex justify-between items-center">
-                      <div className="truncate pr-2">
-                        <h2 className="text-base font-bold text-stone-100 uppercase tracking-wide truncate">{char.name}</h2>
-                        <p className="text-[10px] font-mono text-stone-500 uppercase truncate">{char.type} <span className="text-red-700/80 mx-1">|</span> {char.keyword}</p>
-                      </div>
-                      <button onClick={() => !isOut && toggleOverwatch(char.id)} disabled={isOut} className={`flex-none flex items-center gap-1.5 px-3 py-2 rounded-sm font-mono text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 ${char.overwatch ? 'bg-amber-500/20 text-amber-500 border border-amber-500/50' : 'bg-stone-800 text-stone-500 border border-stone-700 hover:bg-stone-700 hover:text-stone-300'}`}>
-                        <Crosshair size={14} className={char.overwatch ? 'animate-pulse' : ''} /> {char.overwatch ? 'Watching' : 'Overwatch'}
+          const handleUndo = () => { if (historyIndex > 0) setHistoryIndex(historyIndex - 1); };
+          const handleRedo = () => { if (historyIndex < history.length - 1) setHistoryIndex(historyIndex + 1); };
+
+          const handleExportBackup = () => {
+            const dataToSave = {
+              version: "1.7",
+              timestamp: new Date().toISOString(),
+              squadName, squad, baseType, baseUpgrades, scavengePoints
+            };
+            const blob = new Blob([JSON.stringify(dataToSave, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `${squadName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_backup.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            showNotify("Backup file downloaded successfully.");
+          };
+
+          const handleImportClick = () => {
+            setConfirmDialog({
+              message: "WARNING: Restoring a backup will completely overwrite your current roster and base progress. Proceed?",
+              onConfirm: () => { fileInputRef.current?.click(); setConfirmDialog(null); }
+            });
+          };
+
+          const handleFileImport = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              try {
+                const importedData = JSON.parse(e.target.result);
+                if (importedData.squad && importedData.baseType) {
+                  const migratedSquad = importedData.squad.map(c => ({ 
+                    ...c, 
+                    injuries: c.injuries || [],
+                    level: c.level || 0,
+                    experience: c.experience || 0,
+                    loot: c.loot || 0,
+                    heavyLoot: c.heavyLoot || 0,
+                    kills: c.kills || 0
+                  }));
+                  
+                  let migratedBaseType = importedData.baseType;
+                  if (migratedBaseType === 'Farmhouse') migratedBaseType = 'The Farm House';
+                  if (!BASE_TYPES[migratedBaseType]) migratedBaseType = 'The Farm House';
+
+                  if (importedData.squadName) setSquadName(importedData.squadName);
+                  pushState({
+                    squad: migratedSquad,
+                    baseType: migratedBaseType,
+                    baseUpgrades: importedData.baseUpgrades || [],
+                    scavengePoints: importedData.scavengePoints || 0
+                  });
+                  showNotify("Backup restored successfully. Welcome back.");
+                  setMode('base');
+                } else {
+                  showNotify("ERROR: Invalid or corrupted backup file format.");
+                }
+              } catch (error) {
+                showNotify("ERROR: Failed to parse the backup file.");
+              }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+          };
+
+          const updateCharacterState = (id, field, delta) => {
+            pushState({
+              squad: squad.map(char => {
+                if (char.id === id) {
+                  let newValue = char[field] + delta;
+                  if (newValue < 0) newValue = 0;
+                  if (field === 'damage' && newValue > char.stats.DC) newValue = char.stats.DC;
+                  return { ...char, [field]: newValue };
+                }
+                return char;
+              })
+            });
+          };
+
+          const toggleOverwatch = (id) => {
+            pushState({ squad: squad.map(char => char.id === id ? { ...char, overwatch: !char.overwatch } : char) });
+          };
+
+          const resetTurnTrackers = () => {
+            setConfirmDialog({
+              message: "CRITICAL: Purge turn-based telemetry? (Clears Overwatch & Noise tokens for all members. Ammo remains intact.)",
+              onConfirm: () => {
+                pushState({ squad: squad.map(char => ({ ...char, noise: 0, overwatch: false })) });
+                setConfirmDialog(null);
+              }
+            });
+          };
+
+          const handleAddBaseUpgrade = () => {
+            if (!newUpgrade.trim()) return;
+            const cost = UPGRADE_DATA[newUpgrade];
+            
+            if (scavengePoints < cost) {
+              showNotify(`ERROR: Not enough Scavenge Points. ${newUpgrade} costs ${cost} SP.`); return;
+            }
+            if (baseUpgrades.length >= baseDef.spaces) {
+              showNotify("ERROR: No empty plots available in current Refuge!"); return;
+            }
+            
+            pushState({ 
+              baseUpgrades: [...baseUpgrades, newUpgrade.trim()],
+              scavengePoints: scavengePoints - cost
+            });
+            setNewUpgrade("");
+            showNotify(`${newUpgrade} constructed successfully.`);
+          };
+
+          const handleRemoveBaseUpgrade = (index) => {
+            pushState({ baseUpgrades: baseUpgrades.filter((_, i) => i !== index) });
+          };
+
+          const handleRecruit = () => {
+            if (!recruitName.trim()) return;
+            if (squad.length >= currentCapacity) {
+              showNotify(`ERROR: Base at maximum capacity (${currentCapacity})!`); return;
+            }
+            const newChar = {
+              id: Date.now(), name: recruitName.trim(), type: recruitType, keyword: recruitKeyword,
+              level: 0, experience: 0,
+              stats: { AP: 6, CQC: 3, FA: 3, S: 3, E: 3, DC: 3, C: 3, I: 3 },
+              damage: 0, ammo: 0, noise: 0, overwatch: false, loot: 0, heavyLoot: 0, kills: 0,
+              equipment: [], specialRules: ["None"], skills: [], injuries: []
+            };
+            pushState({ squad: [...squad, newChar] });
+            setRecruitName("");
+            showNotify(`${newChar.name} added to the roster.`);
+          };
+
+          const handleRemoveCharacter = (id) => {
+            const char = squad.find(c => c.id === id);
+            setConfirmDialog({
+              message: `Permanently remove ${char.name} from the roster? (KIA/Exiled)`,
+              onConfirm: () => {
+                pushState({ squad: squad.filter(c => c.id !== id) });
+                if (selectedCharId === id) setSelectedCharId(null);
+                setConfirmDialog(null);
+              }
+            });
+          };
+
+          const permanentlyUpdateStat = (id, stat, delta) => {
+            pushState({
+              squad: squad.map(c => {
+                if (c.id === id) {
+                  return { ...c, stats: { ...c.stats, [stat]: Math.max(1, c.stats[stat] + delta) } };
+                }
+                return c;
+              })
+            });
+          };
+
+          const addListAttribute = (id, listName, value, resetFn) => {
+            if (!value.trim()) return;
+            pushState({ squad: squad.map(c => c.id === id ? { ...c, [listName]: [...c[listName], value.trim()] } : c) });
+            resetFn("");
+          };
+
+          const removeListAttribute = (id, listName, index) => {
+            pushState({ squad: squad.map(c => c.id === id ? { ...c, [listName]: c[listName].filter((_, i) => i !== index) } : c) });
+          };
+
+          const applyInjury = (id) => {
+            const injuryDef = INJURY_TABLE.find(i => i.name === selectedInjury);
+            if (!injuryDef) return;
+
+            if (injuryDef.effect === "KIA") {
+              handleRemoveCharacter(id);
+              return;
+            }
+
+            pushState({
+              squad: squad.map(c => {
+                if (c.id === id) {
+                  let updatedStats = { ...c.stats };
+                  let updatedInjuries = [...(c.injuries || [])];
+
+                  if (injuryDef.effect !== "NONE") {
+                    updatedStats[injuryDef.effect] = Math.max(1, updatedStats[injuryDef.effect] + injuryDef.penalty);
+                  }
+                  
+                  if (injuryDef.name !== "Full Recovery") {
+                    updatedInjuries.push(injuryDef.name);
+                  }
+
+                  return { ...c, stats: updatedStats, injuries: updatedInjuries };
+                }
+                return c;
+              })
+            });
+            showNotify(`Applied ${injuryDef.name} to character.`);
+          };
+
+          const removeInjuryLog = (charId, injuryIndex) => {
+            pushState({
+              squad: squad.map(c => {
+                if (c.id === charId) {
+                  const newInjuries = c.injuries.filter((_, i) => i !== injuryIndex);
+                  return { ...c, injuries: newInjuries };
+                }
+                return c;
+              })
+            });
+          };
+
+          const handleSetSP = () => {
+            const val = window.prompt("Enter new Scavenge Points total:", scavengePoints);
+            if (val !== null && !isNaN(parseInt(val))) {
+              pushState({ scavengePoints: Math.max(0, parseInt(val)) });
+            }
+          };
+
+          const selectedChar = squad.find(c => c.id === selectedCharId);
+
+          return (
+            <div className="h-full w-full flex flex-col relative selection:bg-red-900 selection:text-white">
+              <div className="absolute inset-0 pointer-events-none opacity-30 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-stone-950 to-black z-0"></div>
+              
+              <input type="file" accept=".json" ref={fileInputRef} onChange={handleFileImport} style={{ display: 'none' }} />
+
+              {notification && (
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-amber-500 text-stone-950 px-4 py-2 rounded-md font-bold font-mono text-sm shadow-[0_0_20px_rgba(245,158,11,0.6)] flex items-center gap-2 max-w-[90vw] text-center transition-all animate-in slide-in-from-top-4">
+                  <AlertTriangle size={18} className="shrink-0" /> 
+                  <span className="leading-tight">{notification}</span>
+                </div>
+              )}
+              {confirmDialog && (
+                <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center backdrop-blur-sm p-4">
+                  <div className="bg-stone-900 border border-red-900 p-6 rounded-sm max-w-md w-full shadow-[0_0_30px_rgba(220,38,38,0.3)]">
+                    <div className="flex items-center gap-3 text-red-500 mb-4">
+                      <AlertTriangle size={24} />
+                      <h3 className="text-lg font-black uppercase tracking-wider">Confirm Action</h3>
+                    </div>
+                    <p className="font-mono text-sm text-stone-300 mb-6">{confirmDialog.message}</p>
+                    <div className="flex gap-3 justify-end">
+                      <button onClick={() => setConfirmDialog(null)} className="px-4 py-3 border border-stone-600 text-stone-400 hover:bg-stone-800 active:bg-stone-700 active:scale-95 rounded-sm font-mono text-xs uppercase transition-all">Cancel</button>
+                      <button onClick={confirmDialog.onConfirm} className="px-4 py-3 bg-red-950 border border-red-800 text-red-400 hover:bg-red-900 hover:text-white active:bg-red-800 active:scale-95 rounded-sm font-mono text-xs uppercase transition-all">Confirm Execute</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <header className="flex-none p-2 md:p-3 border-b-2 border-red-900/40 bg-stone-900/80 shadow-[0_4px_20px_rgba(0,0,0,0.7)] z-10 flex flex-wrap justify-between items-center gap-2">
+                <div className="flex-1 min-w-0 pr-2">
+                  <input 
+                    type="text"
+                    value={squadName}
+                    onChange={(e) => setSquadName(e.target.value)}
+                    className="w-full bg-transparent border-b border-transparent hover:border-red-900/50 focus:border-red-600 focus:outline-none text-xl md:text-2xl font-black text-red-600 tracking-widest uppercase drop-shadow-[0_0_8px_rgba(220,38,38,0.5)] transition-colors truncate"
+                    placeholder="ENTER SQUAD NAME"
+                  />
+                  <p className="text-[10px] md:text-xs font-mono text-stone-500 uppercase tracking-widest hidden sm:block truncate mt-1">
+                    LD:ZA // {mode === 'tactical' ? 'Combat Tactical Roster' : 'Base Management System'}
+                  </p>
+                </div>
+                
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex border-r border-stone-700 pr-2 mr-1 gap-1">
+                    <button onClick={handleUndo} disabled={historyIndex === 0} title="Undo Action" className="flex items-center justify-center p-2 bg-stone-950 hover:bg-stone-800 active:bg-stone-700 active:scale-95 disabled:opacity-30 disabled:active:scale-100 text-stone-400 rounded-sm font-mono text-[10px] border border-stone-800 transition-all">
+                      <Undo2 size={16} />
+                    </button>
+                    <button onClick={handleRedo} disabled={historyIndex === history.length - 1} title="Redo Action" className="flex items-center justify-center p-2 bg-stone-950 hover:bg-stone-800 active:bg-stone-700 active:scale-95 disabled:opacity-30 disabled:active:scale-100 text-stone-400 rounded-sm font-mono text-[10px] border border-stone-800 transition-all">
+                      <Redo2 size={16} />
+                    </button>
+                  </div>
+
+                  <div className="flex border-r border-stone-700 pr-2 mr-1 gap-1">
+                    <button onClick={handleExportBackup} title="Backup Data" className="flex items-center justify-center px-2 py-2 md:py-1.5 bg-stone-950 hover:bg-stone-800 active:scale-95 text-stone-400 rounded-sm font-mono text-[10px] border border-stone-800 transition-all">
+                      <Download size={16} className="lg:mr-1" /> <span className="hidden lg:inline uppercase">Backup</span>
+                    </button>
+                    <button onClick={handleImportClick} title="Restore Data" className="flex items-center justify-center px-2 py-2 md:py-1.5 bg-stone-950 hover:bg-stone-800 active:scale-95 text-stone-400 rounded-sm font-mono text-[10px] border border-stone-800 transition-all">
+                      <Upload size={16} className="lg:mr-1" /> <span className="hidden lg:inline uppercase">Restore</span>
+                    </button>
+                  </div>
+
+                  {mode === 'tactical' ? (
+                    <>
+                      <button onClick={resetTurnTrackers} className="flex items-center gap-2 px-3 py-2 bg-stone-950 hover:bg-red-950 active:scale-95 text-stone-400 hover:text-red-400 rounded-sm font-mono text-[10px] md:text-xs tracking-wider uppercase transition-all border border-stone-800 shadow-sm">
+                        <Crosshair size={16} /> <span className="hidden sm:inline">End Turn</span>
                       </button>
-                    </div>
+                      <button onClick={() => setMode('base')} className="flex items-center gap-2 px-3 py-2 bg-stone-800 hover:bg-stone-700 active:scale-95 text-stone-200 rounded-sm font-mono text-[10px] md:text-xs tracking-wider uppercase transition-all border border-stone-600 shadow-sm">
+                        <Home size={16} /> <span className="hidden sm:inline">Base MGT</span>
+                      </button>
+                    </>
+                  ) : (
+                    <button onClick={() => setMode('tactical')} className="flex items-center gap-2 px-3 py-2 bg-red-950 hover:bg-red-900 active:scale-95 text-red-200 rounded-sm font-mono text-[10px] md:text-xs tracking-wider uppercase transition-all border border-red-800 shadow-[0_0_10px_rgba(153,27,27,0.5)]">
+                      <Swords size={16} /> <span className="hidden sm:inline">Tactical Mode</span>
+                    </button>
+                  )}
+                </div>
+              </header>
 
-                    {/* Base Stats Row */}
-                    <div className="flex-none p-1.5 bg-stone-950">
-                      <div className="grid grid-cols-8 gap-0.5 text-center font-mono">
-                        {Object.entries(char.stats).map(([stat, val]) => (
-                          <div key={stat} className="flex flex-col bg-stone-900/50 rounded-sm overflow-hidden border border-stone-800">
-                            <span className="text-[8px] text-stone-500 font-bold bg-stone-950 py-0.5">{stat}</span>
-                            <span className="text-xs font-bold text-stone-300 py-0.5">{val}</span>
+              <main className="flex-1 min-h-0 p-2 z-10 flex flex-col">
+                
+                {mode === 'tactical' && (
+                  <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1 pb-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 items-start">
+                      {squad.map((char) => {
+                        const isOut = char.damage >= char.stats.DC;
+                        const hasInjuries = char.injuries && char.injuries.length > 0;
+
+                        return (
+                          <div key={char.id} className={`flex flex-col relative rounded-sm overflow-hidden border transition-all duration-200 ${isOut ? 'bg-stone-950 border-red-950/50 grayscale opacity-80' : char.overwatch ? 'bg-stone-900 border-amber-500/80 shadow-[inset_0_0_15px_rgba(245,158,11,0.1),0_0_10px_rgba(245,158,11,0.2)]' : 'bg-stone-900 border-stone-700 shadow-lg'}`}>
+                            {isOut && (
+                              <div className="absolute inset-0 bg-red-950/30 z-20 flex flex-col items-center justify-center backdrop-blur-[2px]">
+                                <Skull size={48} className="text-red-600 mb-1 opacity-90 drop-shadow-md" />
+                                <span className="text-xl font-black font-mono text-red-600 tracking-widest uppercase outline-text bg-black/50 px-2 rounded">K.I.A / O.O.A</span>
+                              </div>
+                            )}
+                            
+                            <div className="flex-none p-2 bg-stone-950/80 border-b border-stone-800 flex justify-between items-center">
+                              <div className="truncate pr-2">
+                                <h2 className="text-base font-bold text-stone-100 uppercase tracking-wide truncate">{char.name}</h2>
+                                <p className="text-[10px] font-mono text-stone-500 uppercase truncate">
+                                  Lvl {char.level} {char.type} <span className="text-red-700/80 mx-1">|</span> {char.keyword}
+                                </p>
+                              </div>
+                              <button onClick={() => !isOut && toggleOverwatch(char.id)} disabled={isOut} className={`flex-none flex items-center gap-1.5 px-3 py-2 rounded-sm font-mono text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 ${char.overwatch ? 'bg-amber-500/20 text-amber-500 border border-amber-500/50' : 'bg-stone-800 text-stone-500 border border-stone-700 hover:bg-stone-700 hover:text-stone-300'}`}>
+                                <Crosshair size={14} className={char.overwatch ? 'animate-pulse' : ''} /> {char.overwatch ? 'Watching' : 'Overwatch'}
+                              </button>
+                            </div>
+
+                            <div className="flex-none p-1.5 bg-stone-950">
+                              <div className="grid grid-cols-8 gap-0.5 text-center font-mono">
+                                {Object.entries(char.stats).map(([stat, val]) => (
+                                  <div key={stat} className="flex flex-col bg-stone-900/50 rounded-sm overflow-hidden border border-stone-800">
+                                    <span className="text-[8px] text-stone-500 font-bold bg-stone-950 py-0.5">{stat}</span>
+                                    <span className="text-xs font-bold text-stone-300 py-0.5">{val}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="flex-none grid grid-cols-3 gap-1.5 p-2 border-t border-stone-800 bg-stone-900/30">
+                              
+                              <div className="flex flex-col items-center bg-stone-950/50 border border-stone-800 rounded-sm p-1.5">
+                                <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-red-500 mb-1.5"><Heart size={12} /> DMG</div>
+                                <div className="flex items-center gap-2">
+                                  <button onClick={() => updateCharacterState(char.id, 'damage', -1)} className="w-8 h-8 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Minus size={16}/></button>
+                                  <span className={`text-xl font-mono font-black w-6 text-center leading-none ${char.damage > 0 ? 'text-red-500 drop-shadow-[0_0_3px_rgba(239,68,68,0.8)]' : 'text-stone-400'}`}>{char.damage}</span>
+                                  <button onClick={() => updateCharacterState(char.id, 'damage', 1)} className="w-8 h-8 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Plus size={16}/></button>
+                                </div>
+                              </div>
+
+                              <div className="flex flex-col items-center bg-stone-950/50 border border-stone-800 rounded-sm p-1.5 relative">
+                                <div className="flex items-center justify-center w-full relative mb-1.5">
+                                  <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-blue-400"><ShieldAlert size={12} /> AMMO</div>
+                                  <button onClick={() => updateCharacterState(char.id, 'ammo', -char.ammo)} className="absolute right-0 text-stone-600 hover:text-blue-400 active:scale-95 transition-all" title="Reset Ammo to 0"><RotateCcw size={12} /></button>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <button onClick={() => updateCharacterState(char.id, 'ammo', -1)} className="w-8 h-8 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Minus size={16}/></button>
+                                  <span className={`text-xl font-mono font-black w-6 text-center leading-none ${char.ammo > 0 ? 'text-blue-400 drop-shadow-[0_0_3px_rgba(96,165,250,0.8)]' : 'text-stone-400'}`}>{char.ammo}</span>
+                                  <button onClick={() => updateCharacterState(char.id, 'ammo', 1)} className="w-8 h-8 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Plus size={16}/></button>
+                                </div>
+                              </div>
+
+                              <div className="flex flex-col items-center bg-stone-950/50 border border-stone-800 rounded-sm p-1.5">
+                                <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-amber-500 mb-1.5"><Volume2 size={12} /> NOISE</div>
+                                <div className="flex items-center gap-2">
+                                  <button onClick={() => updateCharacterState(char.id, 'noise', -1)} className="w-8 h-8 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Minus size={16}/></button>
+                                  <span className={`text-xl font-mono font-black w-6 text-center leading-none ${char.noise > 0 ? 'text-amber-500 drop-shadow-[0_0_3px_rgba(245,158,11,0.8)]' : 'text-stone-400'}`}>{char.noise}</span>
+                                  <button onClick={() => updateCharacterState(char.id, 'noise', 1)} className="w-8 h-8 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Plus size={16}/></button>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex-none grid grid-cols-3 gap-1.5 p-2 border-t border-stone-800 bg-stone-900/40">
+                              <div className="flex flex-col items-center bg-stone-950/50 border border-stone-800 rounded-sm p-1.5">
+                                <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-stone-400 mb-1.5"><Skull size={10} /> KILLS</div>
+                                <div className="flex items-center gap-1">
+                                  <button onClick={() => updateCharacterState(char.id, 'kills', -1)} className="w-6 h-6 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Minus size={14}/></button>
+                                  <span className={`text-base font-mono font-black w-5 text-center leading-none ${char.kills > 0 ? 'text-red-500 drop-shadow-[0_0_3px_rgba(239,68,68,0.8)]' : 'text-stone-400'}`}>{char.kills || 0}</span>
+                                  <button onClick={() => updateCharacterState(char.id, 'kills', 1)} className="w-6 h-6 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Plus size={14}/></button>
+                                </div>
+                              </div>
+                              <div className="flex flex-col items-center bg-stone-950/50 border border-stone-800 rounded-sm p-1.5">
+                                <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-stone-400 mb-1.5"><Box size={10} /> STD LOOT</div>
+                                <div className="flex items-center gap-1">
+                                  <button onClick={() => updateCharacterState(char.id, 'loot', -1)} className="w-6 h-6 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Minus size={14}/></button>
+                                  <span className={`text-base font-mono font-black w-5 text-center leading-none ${char.loot > 0 ? 'text-green-400 drop-shadow-[0_0_3px_rgba(74,222,128,0.8)]' : 'text-stone-400'}`}>{char.loot || 0}</span>
+                                  <button onClick={() => updateCharacterState(char.id, 'loot', 1)} className="w-6 h-6 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Plus size={14}/></button>
+                                </div>
+                              </div>
+                              <div className="flex flex-col items-center bg-stone-950/50 border border-stone-800 rounded-sm p-1.5">
+                                <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-stone-400 mb-1.5"><Weight size={10} /> HEAVY</div>
+                                <div className="flex items-center gap-1">
+                                  <button onClick={() => updateCharacterState(char.id, 'heavyLoot', -1)} className="w-6 h-6 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Minus size={14}/></button>
+                                  <span className={`text-base font-mono font-black w-5 text-center leading-none ${char.heavyLoot > 0 ? 'text-amber-500 drop-shadow-[0_0_3px_rgba(245,158,11,0.8)]' : 'text-stone-400'}`}>{char.heavyLoot || 0}</span>
+                                  <button onClick={() => updateCharacterState(char.id, 'heavyLoot', 1)} className="w-6 h-6 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Plus size={14}/></button>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {(char.heavyLoot > 0 && !char.specialRules.includes("Heavy Lifter")) && (
+                              <div className="flex-none bg-amber-950/50 border-y border-amber-900 text-amber-500 text-[10px] font-mono font-bold text-center py-1.5 uppercase tracking-widest flex items-center justify-center gap-1.5 shadow-[inset_0_0_8px_rgba(245,158,11,0.2)]">
+                                <AlertTriangle size={12} className="animate-pulse" /> Encumbered (Movement Penalty)
+                              </div>
+                            )}
+
+                            <div className="p-2 border-t border-stone-800 flex flex-col gap-2 flex-auto">
+                              <div>
+                                <span className="text-[9px] font-mono text-stone-500 font-bold uppercase block mb-1">Hardware (Tap for info)</span>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {char.equipment.length === 0 ? <span className="text-[10px] text-stone-600">Unarmed</span> : char.equipment.map((eq, i) => {
+                                    const wp = WEAPON_DATA[eq];
+                                    return (
+                                      <div 
+                                        key={i} 
+                                        onClick={() => showNotify(TOOLTIPS[eq] || "No description available.")}
+                                        className="flex flex-col px-2 py-1 bg-stone-800 active:bg-stone-700 text-stone-300 rounded-sm border border-stone-700 cursor-pointer transition-colors"
+                                      >
+                                        <span className="text-[10px] font-bold truncate">{eq}</span>
+                                        {wp && wp.type === 'Ranged' && (
+                                          <div className="text-[8px] text-blue-400 font-mono mt-0.5 font-bold leading-tight">
+                                            <div>Rng: {wp.range}" | Hit: {Math.max(2, 7 - char.stats.FA - wp.fa)}+</div>
+                                            <div>Ammo: {char.ammo}/{wp.cap}</div>
+                                          </div>
+                                        )}
+                                        {wp && wp.type === 'Melee' && (
+                                          <div className="text-[8px] text-red-400 font-mono mt-0.5 font-bold leading-tight">
+                                            <div>CQC: 1D6+{char.stats.CQC + wp.cqc}</div>
+                                            <div>Dmg: 1D6+{char.stats.S + wp.str}</div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                              <div>
+                                <span className="text-[9px] font-mono text-stone-500 font-bold uppercase block mb-1">Attributes (Tap for info)</span>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {char.specialRules.filter(r => r !== "None").map((rule, i) => (
+                                    <button 
+                                      key={`r-${i}`} 
+                                      onClick={() => showNotify(TOOLTIPS[rule] || "No description available.")}
+                                      className="px-2 py-1 bg-red-950/30 active:bg-red-900/50 text-red-400 rounded-sm text-[10px] border border-red-900/30 truncate cursor-pointer transition-colors"
+                                    >
+                                      {rule}
+                                    </button>
+                                  ))}
+                                  {char.skills.map((skill, i) => (
+                                    <button 
+                                      key={`s-${i}`} 
+                                      onClick={() => showNotify(TOOLTIPS[skill] || "No description available.")}
+                                      className="px-2 py-1 bg-green-950/30 active:bg-green-900/50 text-green-400 rounded-sm text-[10px] border border-green-900/30 truncate cursor-pointer transition-colors"
+                                    >
+                                      {skill}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                              {hasInjuries && (
+                                <div className="mt-1 pt-2 border-t border-red-900/20">
+                                  <span className="text-[9px] font-mono text-red-500 font-bold uppercase block mb-1">Sustained Injuries</span>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {char.injuries.map((inj, i) => (
+                                      <span key={i} className="px-2 py-1 bg-red-950 text-red-300 rounded-sm text-[10px] border border-red-900/50 truncate">
+                                        {inj}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        ))}
-                      </div>
+                        );
+                      })}
                     </div>
+                  </div>
+                )}
 
-                    {/* Tactical Trackers Row */}
-                    <div className="flex-none grid grid-cols-3 gap-1.5 p-2 border-t border-stone-800 bg-stone-900/30">
+                {mode === 'base' && (
+                  <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-2 overflow-hidden">
+                    
+                    <div className="w-full lg:w-1/3 flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-1 border border-stone-800 bg-stone-900 rounded-sm p-3 shrink-0">
+                      <div className="flex items-center gap-2 mb-2 text-stone-400 border-b border-stone-800 pb-2">
+                        <Home size={18} /> <h2 className="font-bold uppercase tracking-wider text-sm">Refuge Network</h2>
+                      </div>
                       
-                      {/* Damage */}
-                      <div className="flex flex-col items-center bg-stone-950/50 border border-stone-800 rounded-sm p-1.5">
-                        <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-red-500 mb-1.5"><Heart size={12} /> DMG</div>
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => updateCharacterState(char.id, 'damage', -1)} className="w-8 h-8 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Minus size={16}/></button>
-                          <span className={`text-xl font-mono font-black w-6 text-center leading-none ${char.damage > 0 ? 'text-red-500 drop-shadow-[0_0_3px_rgba(239,68,68,0.8)]' : 'text-stone-400'}`}>{char.damage}</span>
-                          <button onClick={() => updateCharacterState(char.id, 'damage', 1)} className="w-8 h-8 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Plus size={16}/></button>
+                      <div className="mb-4">
+                        <label className="text-[10px] font-mono text-stone-500 uppercase block mb-1">Base Type</label>
+                        <select 
+                          value={baseType} 
+                          onChange={(e) => pushState({ baseType: e.target.value })}
+                          className="w-full bg-stone-950 border border-stone-700 text-stone-200 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 font-mono active:bg-stone-800"
+                        >
+                          {Object.keys(BASE_TYPES).map(type => <option key={type} value={type}>{type}</option>)}
+                        </select>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 mb-4">
+                        <div className="bg-stone-950 border border-stone-800 p-2 rounded-sm text-center flex flex-col justify-center">
+                          <span className="text-[9px] font-mono text-stone-500 uppercase block">Capacity</span>
+                          <span className={`text-lg font-black font-mono mt-1 ${squad.length >= currentCapacity ? 'text-red-500' : 'text-stone-300'}`}>
+                            {squad.length} / {currentCapacity}
+                          </span>
+                        </div>
+                        <div className="bg-stone-950 border border-stone-800 p-2 rounded-sm text-center flex flex-col justify-center">
+                          <span className="text-[9px] font-mono text-stone-500 uppercase block">Plots Used</span>
+                          <span className={`text-lg font-black font-mono mt-1 ${baseUpgrades.length >= baseDef.spaces ? 'text-amber-500' : 'text-stone-300'}`}>
+                            {baseUpgrades.length} / {baseDef.spaces}
+                          </span>
+                        </div>
+                        <div className="bg-stone-950 border border-stone-800 p-2 rounded-sm flex flex-col items-center justify-center">
+                          <span className="text-[9px] font-mono text-stone-500 uppercase block mb-1">Scavenge Pts</span>
+                          <div className="flex items-center gap-1">
+                            <button onClick={() => pushState({ scavengePoints: Math.max(0, scavengePoints - 1) })} className="p-0.5 text-stone-500 hover:text-stone-300 active:scale-95 transition-all"><Minus size={14} /></button>
+                            <button onClick={handleSetSP} className="text-lg font-black font-mono text-green-400 hover:text-green-300 transition-colors w-8 text-center" title="Tap to enter amount">{scavengePoints}</button>
+                            <button onClick={() => pushState({ scavengePoints: scavengePoints + 1 })} className="p-0.5 text-stone-500 hover:text-stone-300 active:scale-95 transition-all"><Plus size={14} /></button>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Ammo */}
-                      <div className="flex flex-col items-center bg-stone-950/50 border border-stone-800 rounded-sm p-1.5">
-                        <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-blue-400 mb-1.5"><ShieldAlert size={12} /> AMMO</div>
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => updateCharacterState(char.id, 'ammo', -1)} className="w-8 h-8 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Minus size={16}/></button>
-                          <span className={`text-xl font-mono font-black w-6 text-center leading-none ${char.ammo > 0 ? 'text-blue-400 drop-shadow-[0_0_3px_rgba(96,165,250,0.8)]' : 'text-stone-400'}`}>{char.ammo}</span>
-                          <button onClick={() => updateCharacterState(char.id, 'ammo', 1)} className="w-8 h-8 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Plus size={16}/></button>
-                        </div>
-                      </div>
-
-                      {/* Noise */}
-                      <div className="flex flex-col items-center bg-stone-950/50 border border-stone-800 rounded-sm p-1.5">
-                        <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-amber-500 mb-1.5"><Volume2 size={12} /> NOISE</div>
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => updateCharacterState(char.id, 'noise', -1)} className="w-8 h-8 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Minus size={16}/></button>
-                          <span className={`text-xl font-mono font-black w-6 text-center leading-none ${char.noise > 0 ? 'text-amber-500 drop-shadow-[0_0_3px_rgba(245,158,11,0.8)]' : 'text-stone-400'}`}>{char.noise}</span>
-                          <button onClick={() => updateCharacterState(char.id, 'noise', 1)} className="w-8 h-8 flex items-center justify-center border border-stone-700 bg-stone-800 active:bg-stone-600 active:scale-95 rounded-sm text-stone-300 transition-all"><Plus size={16}/></button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Attributes Section */}
-                    <div className="flex-none p-2 border-t border-stone-800 flex flex-col gap-2">
-                      <div>
-                        <span className="text-[9px] font-mono text-stone-500 font-bold uppercase block mb-1">Hardware (Tap for info)</span>
+                      <div className="mb-4">
+                        <span className="text-[10px] font-mono text-stone-500 uppercase block mb-1">Built-in Perks (Tap for info)</span>
                         <div className="flex flex-wrap gap-1.5">
-                          {char.equipment.length === 0 ? <span className="text-[10px] text-stone-600">Unarmed</span> : char.equipment.map((eq, i) => (
+                          {baseDef.perks.map((p, i) => (
                             <button 
                               key={i} 
-                              onClick={() => showNotify(TOOLTIPS[eq] || "No description available.")}
-                              className="px-2 py-1 bg-stone-800 active:bg-stone-700 text-stone-300 rounded-sm text-[10px] border border-stone-700 truncate cursor-pointer transition-colors"
+                              onClick={() => showNotify(TOOLTIPS[p] || "No description available.")}
+                              className="px-2 py-1 bg-stone-800 active:bg-stone-700 text-stone-400 text-[10px] border border-stone-700 rounded-sm cursor-pointer transition-colors text-left"
                             >
-                              {eq}
+                              {p}
                             </button>
                           ))}
                         </div>
                       </div>
+
                       <div>
-                        <span className="text-[9px] font-mono text-stone-500 font-bold uppercase block mb-1">Attributes (Tap for info)</span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {char.specialRules.filter(r => r !== "None").map((rule, i) => (
-                            <button 
-                              key={`r-${i}`} 
-                              onClick={() => showNotify(TOOLTIPS[rule] || "No description available.")}
-                              className="px-2 py-1 bg-red-950/30 active:bg-red-900/50 text-red-400 rounded-sm text-[10px] border border-red-900/30 truncate cursor-pointer transition-colors"
-                            >
-                              {rule}
-                            </button>
-                          ))}
-                          {char.skills.map((skill, i) => (
-                            <button 
-                              key={`s-${i}`} 
-                              onClick={() => showNotify(TOOLTIPS[skill] || "No description available.")}
-                              className="px-2 py-1 bg-green-950/30 active:bg-green-900/50 text-green-400 rounded-sm text-[10px] border border-green-900/30 truncate cursor-pointer transition-colors"
-                            >
-                              {skill}
-                            </button>
+                        <span className="text-[10px] font-mono text-stone-500 uppercase block mb-1">Constructed Upgrades (Tap for info)</span>
+                        <div className="flex flex-col gap-1.5 mb-2">
+                          {baseUpgrades.length === 0 && <span className="text-xs text-stone-600 font-mono italic p-1">No upgrades built.</span>}
+                          {baseUpgrades.map((upg, i) => (
+                            <div key={i} className="flex justify-between items-center bg-stone-950 border border-stone-800 pl-3 pr-2 py-2 rounded-sm active:bg-stone-900 transition-colors">
+                              <span 
+                                className="text-xs font-mono text-stone-300 cursor-pointer flex-1 truncate"
+                                onClick={() => showNotify(TOOLTIPS[upg] || "No description available for this custom upgrade.")}
+                              >
+                                {upg}
+                              </span>
+                              <button onClick={() => handleRemoveBaseUpgrade(i)} className="text-red-900 active:text-red-500 ml-2 p-1"><Trash2 size={14} /></button>
+                            </div>
                           ))}
                         </div>
-                      </div>
-                      {/* Injuries */}
-                      {hasInjuries && (
-                        <div className="mt-1 pt-2 border-t border-red-900/20">
-                          <span className="text-[9px] font-mono text-red-500 font-bold uppercase block mb-1">Sustained Injuries</span>
-                          <div className="flex flex-wrap gap-1.5">
-                            {char.injuries.map((inj, i) => (
-                              <span key={i} className="px-2 py-1 bg-red-950 text-red-300 rounded-sm text-[10px] border border-red-900/50 truncate">
-                                {inj}
-                              </span>
+                        <div className="flex gap-1.5">
+                          <select 
+                            value={newUpgrade} 
+                            onChange={(e) => setNewUpgrade(e.target.value)} 
+                            disabled={baseUpgrades.length >= baseDef.spaces}
+                            className="flex-1 bg-stone-950 border border-stone-700 text-stone-200 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 font-mono disabled:opacity-50 active:bg-stone-800"
+                          >
+                            <option value="" disabled>Select Upgrade...</option>
+                            {UPGRADE_LIST.map(u => (
+                              <option 
+                                key={u} 
+                                value={u} 
+                                disabled={scavengePoints < UPGRADE_DATA[u]} 
+                                className={scavengePoints < UPGRADE_DATA[u] ? "text-stone-600 bg-stone-900" : ""}
+                              >
+                                {u} ({UPGRADE_DATA[u]} SP)
+                              </option>
                             ))}
+                          </select>
+                          <button onClick={handleAddBaseUpgrade} disabled={baseUpgrades.length >= baseDef.spaces} className="px-3 py-2 bg-stone-800 active:bg-stone-700 active:scale-95 border border-stone-700 rounded-sm text-stone-300 disabled:opacity-50 transition-all"><Plus size={16} /></button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="w-full lg:w-1/3 flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-1 border border-stone-800 bg-stone-900 rounded-sm p-3 shrink-0">
+                      <div className="flex items-center gap-2 mb-2 text-stone-400 border-b border-stone-800 pb-2">
+                        <UserPlus size={18} /> <h2 className="font-bold uppercase tracking-wider text-sm">Squad Directory</h2>
+                      </div>
+                      
+                      <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1.5 min-h-[150px]">
+                        {squad.map(char => (
+                          <button 
+                            key={char.id} 
+                            onClick={() => setSelectedCharId(char.id)}
+                            className={`text-left p-3 rounded-sm border transition-all flex justify-between items-center active:scale-[0.98] ${selectedCharId === char.id ? 'bg-red-950/40 border-red-800/50 shadow-[inset_0_0_10px_rgba(153,27,27,0.3)]' : 'bg-stone-950 border-stone-800 hover:border-stone-600'}`}
+                          >
+                            <div>
+                              <div className="text-sm font-bold text-stone-200">{char.name}</div>
+                              <div className="text-[9px] font-mono text-stone-500 uppercase mt-0.5">
+                                Lvl {char.level} {char.type}
+                                {char.injuries && char.injuries.length > 0 && <span className="ml-2 text-red-500 font-bold">[{char.injuries.length} WOUNDS]</span>}
+                              </div>
+                            </div>
+                            {char.damage >= char.stats.DC && <Skull size={16} className="text-red-600" />}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="mt-2 pt-3 border-t border-stone-800 bg-stone-950 p-3 rounded-sm">
+                         <span className="text-[10px] font-mono text-stone-500 uppercase block mb-2">Recruit Survivor</span>
+                         <div className="flex flex-col gap-2">
+                           <input type="text" placeholder="Name" value={recruitName} onChange={e => setRecruitName(e.target.value)} className="w-full bg-stone-900 border border-stone-700 text-stone-200 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 font-mono" />
+                           <div className="flex gap-2">
+                             <select value={recruitKeyword} onChange={e => setRecruitKeyword(e.target.value)} className="w-1/3 bg-stone-900 border border-stone-700 text-stone-200 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 font-mono active:bg-stone-800">
+                               <option>Selfless</option>
+                               <option>Neutral</option>
+                               <option>Selfish</option>
+                             </select>
+                             <select value={recruitType} onChange={e => setRecruitType(e.target.value)} className="flex-1 bg-stone-900 border border-stone-700 text-stone-200 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 font-mono active:bg-stone-800">
+                               <option>Survivor</option>
+                               <option>Tough Guy</option>
+                               <option>Scavenger</option>
+                               <option>Kid</option>
+                               <option>Dog</option>
+                             </select>
+                             <button onClick={handleRecruit} className="px-4 py-2 bg-green-950 border border-green-800 text-green-400 active:bg-green-900 active:scale-95 rounded-sm font-mono text-sm uppercase transition-all"><Plus size={16} /></button>
+                           </div>
+                         </div>
+                      </div>
+                    </div>
+
+                    <div className="w-full lg:w-1/3 flex flex-col overflow-y-auto custom-scrollbar pr-1 border border-stone-800 bg-stone-900 rounded-sm p-3 shrink-0">
+                      <div className="flex items-center gap-2 mb-2 text-stone-400 border-b border-stone-800 pb-2">
+                        <Wrench size={18} /> <h2 className="font-bold uppercase tracking-wider text-sm">Character Lab</h2>
+                      </div>
+                      
+                      {!selectedChar ? (
+                        <div className="flex-1 flex items-center justify-center text-stone-600 font-mono text-sm text-center p-4 min-h-[150px]">
+                          Select a character from the directory to manage their progression, upgrades, and injuries.
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-5">
+                          <div>
+                            <h3 className="text-xl font-black text-stone-100 uppercase tracking-wider">{selectedChar.name}</h3>
+                            <p className="text-[10px] font-mono text-stone-500 uppercase">{selectedChar.type} | {selectedChar.keyword}</p>
+                          </div>
+
+                          <div className="bg-stone-950 border border-stone-800 p-2 rounded-sm grid grid-cols-2 gap-2">
+                            <div className="flex flex-col items-center">
+                              <span className="text-[10px] font-mono text-stone-500 font-bold uppercase mb-1">Experience (XP)</span>
+                              <div className="flex items-center gap-2">
+                                <button onClick={() => updateCharacterState(selectedChar.id, 'experience', -1)} className="p-1 text-stone-500 hover:text-stone-300 active:scale-95 transition-all"><Minus size={16} /></button>
+                                <span className="text-xl font-bold font-mono text-blue-400 w-8 text-center">{selectedChar.experience}</span>
+                                <button onClick={() => updateCharacterState(selectedChar.id, 'experience', 1)} className="p-1 text-stone-500 hover:text-stone-300 active:scale-95 transition-all"><Plus size={16} /></button>
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-center border-l border-stone-800">
+                              <span className="text-[10px] font-mono text-stone-500 font-bold uppercase mb-1">Level</span>
+                              <div className="flex items-center gap-2">
+                                <button onClick={() => updateCharacterState(selectedChar.id, 'level', -1)} className="p-1 text-stone-500 hover:text-stone-300 active:scale-95 transition-all"><Minus size={16} /></button>
+                                <span className="text-xl font-bold font-mono text-amber-500 w-8 text-center">{selectedChar.level}</span>
+                                <button onClick={() => updateCharacterState(selectedChar.id, 'level', 1)} className="p-1 text-stone-500 hover:text-stone-300 active:scale-95 transition-all"><Plus size={16} /></button>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div>
+                            <span className="text-[10px] font-mono text-stone-500 uppercase block mb-1">Permanent Stat Upgrades</span>
+                            <div className="grid grid-cols-4 gap-1.5">
+                              {Object.entries(selectedChar.stats).map(([stat, val]) => (
+                                <div key={stat} className="bg-stone-950 border border-stone-800 rounded-sm flex flex-col items-center p-1.5">
+                                  <span className="text-[9px] font-mono text-stone-500 font-bold">{stat}</span>
+                                  <div className="flex items-center gap-2 w-full justify-center mt-1">
+                                    <button onClick={() => permanentlyUpdateStat(selectedChar.id, stat, -1)} className="text-stone-600 active:text-stone-300 active:scale-95 p-1"><Minus size={12} /></button>
+                                    <span className="text-sm font-bold text-stone-200 w-4 text-center">{val}</span>
+                                    <button onClick={() => permanentlyUpdateStat(selectedChar.id, stat, 1)} className="text-green-700 active:text-green-400 active:scale-95 p-1"><Plus size={12} /></button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="bg-red-950/20 border border-red-900/30 p-3 rounded-sm">
+                            <div className="flex items-center gap-2 mb-2 text-red-500 border-b border-red-900/30 pb-1">
+                              <Activity size={14} /> <span className="text-[10px] font-mono font-bold uppercase block">Medical / Injury Log</span>
+                            </div>
+                            
+                            <div className="flex flex-col gap-1.5 mb-3">
+                              {(!selectedChar.injuries || selectedChar.injuries.length === 0) && <span className="text-xs text-stone-600 font-mono italic p-1">No permanent injuries.</span>}
+                              {selectedChar.injuries && selectedChar.injuries.map((inj, i) => (
+                                <div key={i} className="flex justify-between items-center bg-red-950/40 border border-red-900/50 px-3 py-2 rounded-sm">
+                                  <span className="text-xs font-mono text-red-300 truncate">{inj}</span>
+                                  <button onClick={() => removeInjuryLog(selectedChar.id, i)} className="text-red-700 active:text-red-400 ml-2 p-1" title="Remove Record"><Trash2 size={14} /></button>
+                                </div>
+                              ))}
+                            </div>
+
+                            <div className="flex gap-2">
+                               <select 
+                                 value={selectedInjury} 
+                                 onChange={e => setSelectedInjury(e.target.value)} 
+                                 className="flex-1 bg-stone-950 border border-red-900/50 text-stone-200 text-xs rounded-sm p-2 focus:outline-none focus:border-red-500 font-mono active:bg-stone-800"
+                               >
+                                 {INJURY_TABLE.map(inj => (
+                                   <option key={inj.name} value={inj.name}>{inj.name} {inj.effect !== "NONE" && inj.effect !== "KIA" ? `(${inj.penalty} ${inj.effect})` : ''}</option>
+                                 ))}
+                               </select>
+                               <button onClick={() => applyInjury(selectedChar.id)} className="px-3 py-2 bg-red-950 border border-red-800 active:bg-red-900 active:scale-95 rounded-sm text-red-300 font-mono text-[10px] uppercase font-bold transition-all">Apply</button>
+                            </div>
+                          </div>
+
+                          <div>
+                             <span className="text-[10px] font-mono text-stone-500 uppercase block mb-1">Equipment Cache</span>
+                             <div className="flex flex-col gap-1.5 mb-2">
+                                {selectedChar.equipment.map((eq, i) => {
+                                  const wp = WEAPON_DATA[eq];
+                                  return (
+                                  <div key={i} className="flex justify-between items-center bg-stone-950 border border-stone-800 pl-3 pr-2 py-2 rounded-sm active:bg-stone-900 transition-colors">
+                                    <div 
+                                      className="flex flex-col cursor-pointer flex-1 pr-2"
+                                      onClick={() => showNotify(TOOLTIPS[eq] || "No description available.")}
+                                    >
+                                      <span className="text-xs font-mono text-stone-300 truncate">{eq}</span>
+                                      {wp && wp.type === 'Ranged' && (
+                                        <span className="text-[8px] text-blue-400 font-mono mt-0.5 font-bold">
+                                          Rng: {wp.range}" | Hit: {Math.max(2, 7 - selectedChar.stats.FA - wp.fa)}+ | Ammo: {selectedChar.ammo}/{wp.cap}
+                                        </span>
+                                      )}
+                                      {wp && wp.type === 'Melee' && (
+                                        <span className="text-[8px] text-red-400 font-mono mt-0.5 font-bold">
+                                          CQC: 1D6+{selectedChar.stats.CQC + wp.cqc} | Dmg: 1D6+{selectedChar.stats.S + wp.str}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <button onClick={() => removeListAttribute(selectedChar.id, 'equipment', i)} className="text-stone-700 active:text-red-500 p-1 cursor-pointer shrink-0"><Trash2 size={14} /></button>
+                                  </div>
+                                  )
+                                })}
+                             </div>
+                             <div className="flex gap-2">
+                                <select value={newEq} onChange={e => setNewEq(e.target.value)} className="flex-1 bg-stone-950 border border-stone-700 text-stone-200 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 font-mono active:bg-stone-800">
+                                   <option value="" disabled>Select Equipment...</option>
+                                   {EQUIPMENT_LIST.map(eq => <option key={eq} value={eq}>{eq}</option>)}
+                                </select>
+                                <button onClick={() => addListAttribute(selectedChar.id, 'equipment', newEq, setNewEq)} className="px-3 py-2 bg-stone-800 active:bg-stone-700 active:scale-95 border border-stone-700 rounded-sm text-stone-300 transition-all"><Plus size={16} /></button>
+                             </div>
+                          </div>
+
+                          <div>
+                             <span className="text-[10px] font-mono text-stone-500 uppercase block mb-1">Learned Skills / Rules</span>
+                             <div className="flex flex-col gap-1.5 mb-2">
+                                {[...selectedChar.specialRules, ...selectedChar.skills].filter(s => s !== "None").map((skill, i) => (
+                                  <div key={i} className="flex justify-between items-center bg-stone-950 border border-stone-800 pl-3 pr-2 py-2 rounded-sm active:bg-stone-900 transition-colors">
+                                    <span 
+                                      className="text-xs font-mono text-stone-300 truncate cursor-pointer flex-1"
+                                      onClick={() => showNotify(TOOLTIPS[skill] || "No description available.")}
+                                    >{skill}</span>
+                                    {selectedChar.skills.includes(skill) && <button onClick={() => removeListAttribute(selectedChar.id, 'skills', selectedChar.skills.indexOf(skill))} className="text-stone-700 active:text-red-500 ml-2 p-1 cursor-pointer"><Trash2 size={14} /></button>}
+                                  </div>
+                                ))}
+                             </div>
+                             <div className="flex gap-2">
+                                <select value={newSkill} onChange={e => setNewSkill(e.target.value)} className="flex-1 bg-stone-950 border border-stone-700 text-stone-200 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 font-mono active:bg-stone-800">
+                                   <option value="" disabled>Select Skill...</option>
+                                   {SKILL_LIST.map(sk => <option key={sk} value={sk}>{sk}</option>)}
+                                </select>
+                                <button onClick={() => addListAttribute(selectedChar.id, 'skills', newSkill, setNewSkill)} className="px-3 py-2 bg-stone-800 active:bg-stone-700 active:scale-95 border border-stone-700 rounded-sm text-stone-300 transition-all"><Plus size={16} /></button>
+                             </div>
+                          </div>
+
+                          <div className="mt-4 pt-4 border-t border-stone-800">
+                            <button onClick={() => handleRemoveCharacter(selectedChar.id)} className="w-full flex items-center justify-center gap-2 px-3 py-3 bg-red-950/30 border border-red-900/50 text-red-500 active:bg-red-900 active:text-white active:scale-95 rounded-sm font-mono text-xs uppercase tracking-wider transition-all">
+                              <Skull size={16} /> Mark KIA / Exile
+                            </button>
                           </div>
                         </div>
                       )}
                     </div>
                   </div>
-                );
-              })}
+                )}
+              </main>
             </div>
-          </div>
-        )}
+          );
+        }
 
-        {mode === 'base' && (
-          <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-2 overflow-hidden">
-            
-            {/* Panel 1: Refuge Setup */}
-            <div className="w-full lg:w-1/3 flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-1 border border-stone-800 bg-stone-900 rounded-sm p-3 shrink-0">
-              <div className="flex items-center gap-2 mb-2 text-stone-400 border-b border-stone-800 pb-2">
-                <Home size={18} /> <h2 className="font-bold uppercase tracking-wider text-sm">Refuge Network</h2>
-              </div>
-              
-              <div className="mb-4">
-                <label className="text-[10px] font-mono text-stone-500 uppercase block mb-1">Base Type</label>
-                <select 
-                  value={baseType} 
-                  onChange={(e) => pushState({ baseType: e.target.value })}
-                  className="w-full bg-stone-950 border border-stone-700 text-stone-200 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 font-mono active:bg-stone-800"
-                >
-                  {Object.keys(BASE_TYPES).map(type => <option key={type} value={type}>{type}</option>)}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 mb-4">
-                <div className="bg-stone-950 border border-stone-800 p-2 rounded-sm text-center">
-                  <span className="text-[9px] font-mono text-stone-500 uppercase block">Capacity</span>
-                  <span className={`text-lg font-black font-mono ${squad.length >= baseDef.capacity ? 'text-red-500' : 'text-stone-300'}`}>
-                    {squad.length} / {baseDef.capacity}
-                  </span>
-                </div>
-                <div className="bg-stone-950 border border-stone-800 p-2 rounded-sm text-center">
-                  <span className="text-[9px] font-mono text-stone-500 uppercase block">Plots Used</span>
-                  <span className={`text-lg font-black font-mono ${baseUpgrades.length >= baseDef.spaces ? 'text-amber-500' : 'text-stone-300'}`}>
-                    {baseUpgrades.length} / {baseDef.spaces}
-                  </span>
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <span className="text-[10px] font-mono text-stone-500 uppercase block mb-1">Built-in Perks</span>
-                <div className="flex flex-wrap gap-1.5">
-                  {baseDef.perks.map((p, i) => (
-                    <span key={i} className="px-2 py-1 bg-stone-800 text-stone-400 text-[10px] border border-stone-700 rounded-sm">{p}</span>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <span className="text-[10px] font-mono text-stone-500 uppercase block mb-1">Constructed Upgrades</span>
-                <div className="flex flex-col gap-1.5 mb-2">
-                  {baseUpgrades.length === 0 && <span className="text-xs text-stone-600 font-mono italic p-1">No upgrades built.</span>}
-                  {baseUpgrades.map((upg, i) => (
-                    <div key={i} className="flex justify-between items-center bg-stone-950 border border-stone-800 p-2 rounded-sm">
-                      <span className="text-xs font-mono text-stone-300">{upg}</span>
-                      <button onClick={() => handleRemoveBaseUpgrade(i)} className="text-red-900 active:text-red-500 p-1"><Trash2 size={14} /></button>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex gap-1.5">
-                  <input 
-                    type="text" 
-                    value={newUpgrade} 
-                    onChange={(e) => setNewUpgrade(e.target.value)} 
-                    placeholder="e.g. Watchtower..." 
-                    disabled={baseUpgrades.length >= baseDef.spaces}
-                    className="flex-1 bg-stone-950 border border-stone-700 text-stone-200 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 font-mono disabled:opacity-50"
-                  />
-                  <button onClick={handleAddBaseUpgrade} disabled={baseUpgrades.length >= baseDef.spaces} className="px-3 py-2 bg-stone-800 active:bg-stone-700 active:scale-95 border border-stone-700 rounded-sm text-stone-300 disabled:opacity-50 transition-all"><Plus size={16} /></button>
-                </div>
-              </div>
-            </div>
-
-            {/* Panel 2: Roster List */}
-            <div className="w-full lg:w-1/3 flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-1 border border-stone-800 bg-stone-900 rounded-sm p-3 shrink-0">
-              <div className="flex items-center gap-2 mb-2 text-stone-400 border-b border-stone-800 pb-2">
-                <UserPlus size={18} /> <h2 className="font-bold uppercase tracking-wider text-sm">Squad Directory</h2>
-              </div>
-              
-              <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1.5 min-h-[150px]">
-                {squad.map(char => (
-                  <button 
-                    key={char.id} 
-                    onClick={() => setSelectedCharId(char.id)}
-                    className={`text-left p-3 rounded-sm border transition-all flex justify-between items-center active:scale-[0.98] ${selectedCharId === char.id ? 'bg-red-950/40 border-red-800/50 shadow-[inset_0_0_10px_rgba(153,27,27,0.3)]' : 'bg-stone-950 border-stone-800 hover:border-stone-600'}`}
-                  >
-                    <div>
-                      <div className="text-sm font-bold text-stone-200">{char.name}</div>
-                      <div className="text-[9px] font-mono text-stone-500 uppercase mt-0.5">
-                        {char.type}
-                        {char.injuries && char.injuries.length > 0 && <span className="ml-2 text-red-500 font-bold">[{char.injuries.length} WOUNDS]</span>}
-                      </div>
-                    </div>
-                    {char.damage >= char.stats.DC && <Skull size={16} className="text-red-600" />}
-                  </button>
-                ))}
-              </div>
-
-              {/* Recruitment Block */}
-              <div className="mt-2 pt-3 border-t border-stone-800 bg-stone-950 p-3 rounded-sm">
-                 <span className="text-[10px] font-mono text-stone-500 uppercase block mb-2">Recruit Survivor</span>
-                 <div className="flex flex-col gap-2">
-                   <input type="text" placeholder="Name" value={recruitName} onChange={e => setRecruitName(e.target.value)} className="w-full bg-stone-900 border border-stone-700 text-stone-200 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 font-mono" />
-                   <div className="flex gap-2">
-                     <select value={recruitType} onChange={e => setRecruitType(e.target.value)} className="flex-1 bg-stone-900 border border-stone-700 text-stone-200 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 font-mono active:bg-stone-800">
-                       <option>Survivor</option>
-                       <option>Tough Guy</option>
-                       <option>Scavenger</option>
-                       <option>Kid</option>
-                     </select>
-                     <button onClick={handleRecruit} className="px-4 py-2 bg-green-950 border border-green-800 text-green-400 active:bg-green-900 active:scale-95 rounded-sm font-mono text-sm uppercase transition-all"><Plus size={16} /></button>
-                   </div>
-                 </div>
-              </div>
-            </div>
-
-            {/* Panel 3: Character Lab */}
-            <div className="w-full lg:w-1/3 flex flex-col overflow-y-auto custom-scrollbar pr-1 border border-stone-800 bg-stone-900 rounded-sm p-3 shrink-0">
-              <div className="flex items-center gap-2 mb-2 text-stone-400 border-b border-stone-800 pb-2">
-                <Wrench size={18} /> <h2 className="font-bold uppercase tracking-wider text-sm">Character Lab</h2>
-              </div>
-              
-              {!selectedChar ? (
-                <div className="flex-1 flex items-center justify-center text-stone-600 font-mono text-sm text-center p-4 min-h-[150px]">
-                  Select a character from the directory to manage their upgrades and injuries.
-                </div>
-              ) : (
-                <div className="flex flex-col gap-5">
-                  <div>
-                    <h3 className="text-xl font-black text-stone-100 uppercase tracking-wider">{selectedChar.name}</h3>
-                    <p className="text-[10px] font-mono text-stone-500 uppercase">{selectedChar.type} | {selectedChar.keyword}</p>
-                  </div>
-
-                  {/* Stat Upgrades */}
-                  <div>
-                    <span className="text-[10px] font-mono text-stone-500 uppercase block mb-1">Permanent Stat Upgrades</span>
-                    <div className="grid grid-cols-4 gap-1.5">
-                      {Object.entries(selectedChar.stats).map(([stat, val]) => (
-                        <div key={stat} className="bg-stone-950 border border-stone-800 rounded-sm flex flex-col items-center p-1.5">
-                          <span className="text-[9px] font-mono text-stone-500 font-bold">{stat}</span>
-                          <div className="flex items-center gap-2 w-full justify-center mt-1">
-                            <button onClick={() => permanentlyUpdateStat(selectedChar.id, stat, -1)} className="text-stone-600 active:text-stone-300 active:scale-95 p-1"><Minus size={12} /></button>
-                            <span className="text-sm font-bold text-stone-200 w-4 text-center">{val}</span>
-                            <button onClick={() => permanentlyUpdateStat(selectedChar.id, stat, 1)} className="text-green-700 active:text-green-400 active:scale-95 p-1"><Plus size={12} /></button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Injury Management */}
-                  <div className="bg-red-950/20 border border-red-900/30 p-3 rounded-sm">
-                    <div className="flex items-center gap-2 mb-2 text-red-500 border-b border-red-900/30 pb-1">
-                      <Activity size={14} /> <span className="text-[10px] font-mono font-bold uppercase block">Medical / Injury Log</span>
-                    </div>
-                    
-                    <div className="flex flex-col gap-1.5 mb-3">
-                      {(!selectedChar.injuries || selectedChar.injuries.length === 0) && <span className="text-xs text-stone-600 font-mono italic p-1">No permanent injuries.</span>}
-                      {selectedChar.injuries && selectedChar.injuries.map((inj, i) => (
-                        <div key={i} className="flex justify-between items-center bg-red-950/40 border border-red-900/50 px-3 py-2 rounded-sm">
-                          <span className="text-xs font-mono text-red-300 truncate">{inj}</span>
-                          <button onClick={() => removeInjuryLog(selectedChar.id, i)} className="text-red-700 active:text-red-400 ml-2 p-1" title="Remove Record"><Trash2 size={14} /></button>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="flex gap-2">
-                       <select 
-                         value={selectedInjury} 
-                         onChange={e => setSelectedInjury(e.target.value)} 
-                         className="flex-1 bg-stone-950 border border-red-900/50 text-stone-200 text-xs rounded-sm p-2 focus:outline-none focus:border-red-500 font-mono active:bg-stone-800"
-                       >
-                         {INJURY_TABLE.map(inj => (
-                           <option key={inj.name} value={inj.name}>{inj.name} {inj.effect !== "NONE" && inj.effect !== "KIA" ? `(${inj.penalty} ${inj.effect})` : ''}</option>
-                         ))}
-                       </select>
-                       <button onClick={() => applyInjury(selectedChar.id)} className="px-3 py-2 bg-red-950 border border-red-800 active:bg-red-900 active:scale-95 rounded-sm text-red-300 font-mono text-[10px] uppercase font-bold transition-all">Apply</button>
-                    </div>
-                  </div>
-
-                  {/* Equipment Upgrades */}
-                  <div>
-                     <span className="text-[10px] font-mono text-stone-500 uppercase block mb-1">Equipment Cache</span>
-                     <div className="flex flex-col gap-1.5 mb-2">
-                        {selectedChar.equipment.map((eq, i) => (
-                          <div key={i} className="flex justify-between items-center bg-stone-950 border border-stone-800 pl-3 pr-2 py-2 rounded-sm active:bg-stone-900 transition-colors">
-                            <span 
-                              className="text-xs font-mono text-stone-300 truncate cursor-pointer flex-1"
-                              onClick={() => showNotify(TOOLTIPS[eq] || "No description available.")}
-                            >{eq}</span>
-                            <button onClick={() => removeListAttribute(selectedChar.id, 'equipment', i)} className="text-stone-700 active:text-red-500 ml-2 p-1 cursor-pointer"><Trash2 size={14} /></button>
-                          </div>
-                        ))}
-                     </div>
-                     <div className="flex gap-2">
-                        <input type="text" value={newEq} onChange={e => setNewEq(e.target.value)} placeholder="Assign Weapon..." className="flex-1 bg-stone-950 border border-stone-700 text-stone-200 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 font-mono" />
-                        <button onClick={() => addListAttribute(selectedChar.id, 'equipment', newEq, setNewEq)} className="px-3 py-2 bg-stone-800 active:bg-stone-700 active:scale-95 border border-stone-700 rounded-sm text-stone-300 transition-all"><Plus size={16} /></button>
-                     </div>
-                  </div>
-
-                  {/* Skills Upgrades */}
-                  <div>
-                     <span className="text-[10px] font-mono text-stone-500 uppercase block mb-1">Learned Skills / Rules</span>
-                     <div className="flex flex-col gap-1.5 mb-2">
-                        {[...selectedChar.specialRules, ...selectedChar.skills].filter(s => s !== "None").map((skill, i) => (
-                          <div key={i} className="flex justify-between items-center bg-stone-950 border border-stone-800 pl-3 pr-2 py-2 rounded-sm active:bg-stone-900 transition-colors">
-                            <span 
-                              className="text-xs font-mono text-stone-300 truncate cursor-pointer flex-1"
-                              onClick={() => showNotify(TOOLTIPS[skill] || "No description available.")}
-                            >{skill}</span>
-                            {selectedChar.skills.includes(skill) && <button onClick={() => removeListAttribute(selectedChar.id, 'skills', selectedChar.skills.indexOf(skill))} className="text-stone-700 active:text-red-500 ml-2 p-1 cursor-pointer"><Trash2 size={14} /></button>}
-                          </div>
-                        ))}
-                     </div>
-                     <div className="flex gap-2">
-                        <input type="text" value={newSkill} onChange={e => setNewSkill(e.target.value)} placeholder="Learn new skill..." className="flex-1 bg-stone-950 border border-stone-700 text-stone-200 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 font-mono" />
-                        <button onClick={() => addListAttribute(selectedChar.id, 'skills', newSkill, setNewSkill)} className="px-3 py-2 bg-stone-800 active:bg-stone-700 active:scale-95 border border-stone-700 rounded-sm text-stone-300 transition-all"><Plus size={16} /></button>
-                     </div>
-                  </div>
-
-                  {/* Exile / KIA */}
-                  <div className="mt-4 pt-4 border-t border-stone-800">
-                    <button onClick={() => handleRemoveCharacter(selectedChar.id)} className="w-full flex items-center justify-center gap-2 px-3 py-3 bg-red-950/30 border border-red-900/50 text-red-500 active:bg-red-900 active:text-white active:scale-95 rounded-sm font-mono text-xs uppercase tracking-wider transition-all">
-                      <Skull size={16} /> Mark KIA / Exile
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </main>
-
-      <style dangerouslySetInnerHTML={{__html: `
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(120, 113, 108, 0.5); border-radius: 2px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(168, 162, 158, 0.8); }
-      `}} />
-    </div>
-  );
-}
+        // Initialize React Application
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
