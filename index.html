@@ -524,16 +524,29 @@
         };
 
         const INJURY_TABLE = [
-          { name: "Dead (2)", effect: "KIA", penalty: 0, desc: "The character has died and is removed from the roster." },
-          { name: "Captured (3)", effect: "KIA", penalty: 0, desc: "The character is captured by the opponent and removed from the roster." },
-          { name: "Full Recovery (11-12)", effect: "NONE", penalty: 0, desc: "Character makes a full recovery. No permanent stat penalties." },
-          { name: "Psychological Trauma (4)", effect: "C", penalty: -1, desc: "Permanent -1 penalty to Courage (C)." },
-          { name: "Deep Gash (5)", effect: "CQC", penalty: -1, desc: "Permanent -1 penalty to Close Quarters Combat (CQC)." },
-          { name: "Eye Injury (6)", effect: "FA", penalty: -1, desc: "Permanent -1 penalty to Firearms (FA)." },
-          { name: "Shattered Arm (7)", effect: "S", penalty: -1, desc: "Permanent -1 penalty to Strength (S)." },
-          { name: "Chest Wound (8)", effect: "E", penalty: -1, desc: "Permanent -1 penalty to Endurance (E)." },
-          { name: "Leg Wound (9)", effect: "AP", penalty: -1, desc: "Permanent -1 penalty to Action Points (AP)." },
-          { name: "Head Wound (10)", effect: "I", penalty: -1, desc: "Permanent -1 penalty to Intelligence (I)." }
+          { roll: "2", name: "Dead!", effect: "KIA", penalty: "-", desc: "The character has succumbed to their wounds." },
+          { roll: "3", name: "Captured", effect: "Special", penalty: "-", desc: "Captured by opponent. Can trigger Rescue Encounter." },
+          { roll: "4", name: "Arm Injury", effect: "Weapon Restriction", penalty: "-", desc: "Cannot use two-handed weapons or carry two of each type." },
+          { roll: "5", name: "Blinded in One Eye", effect: "FA", penalty: "-1", desc: "Permanent -1 penalty to Firearms." },
+          { roll: "6-8", name: "Full Recovery", effect: "None", penalty: "-", desc: "Recovered without long term side-effects." },
+          { roll: "9", name: "Shell-Shocked", effect: "AP", penalty: "-1", desc: "Permanent -1 penalty to Action Points." },
+          { roll: "10", name: "Leg Injury", effect: "Movement", penalty: "-1", desc: "Must spend an additional AP to Move." },
+          { roll: "11", name: "Infected!", effect: "Special", penalty: "-", desc: "Roll D6. 1-3: Dead. 4-6: Amputate, roll again (1-3: Arm, 4-6: Leg)." },
+          { roll: "12", name: "I'm Never Doing That Again...", effect: "Recovery + 1D6 XP", penalty: "-", desc: "Full recovery and gains an additional 1D6 Experience Points." }
+        ];
+
+        const SUPPLY_TABLE = [
+            { row: "2", cols: ["D6+6 SP\nMinigun", "D6+6 SP\nReflex Sight", "D6+6 SP", "D6+6 SP\nCombat Shotgun", "D6+6 SP\nMilitary Sniper Rifle"] },
+            { row: "3", cols: ["D6+6 SP\nMilitary Assault Rifle", "D6+6 SP\nSilencer", "D6+6 SP", "D6+6 SP\nHunting Crossbow", "D6+6 SP\nHigh-Power Rifle, Scope"] },
+            { row: "4", cols: ["D6+6 SP\nD3+1 Climbing Gear", "D6+3 SP\nTactical Vest", "D6+3 SP\nHeavy Blade", "D6+3 SP\nFire Bomb", "D6+3 SP\nD3+1 Booze"] },
+            { row: "5", cols: ["D6+3 SP\nD3+1 Thrown Explosives", "D6+3 SP\nSurplus SMG", "D6+3 SP", "D6+3 SP\nBreach Shotgun", "D6+3 SP\nD3+1 Med Supplies"] },
+            { row: "6", cols: ["D6 SP\nSurplus Assault Rifle", "D6 SP\nSemi-Automatic", "D6 SP\nKnife", "D6 SP\nMedical Supplies", "D6 SP\nD3 Semi-Automatics"] },
+            { row: "7", cols: ["D6 SP\nSurplus SMG", "D6 SP\nRevolver", "D6 SP", "D6 SP\nBooze", "D6 SP\nHunting Rifle"] },
+            { row: "8", cols: ["D6 SP\nMilitary SMG", "D6 SP\nMagnum", "D6 SP\nClub", "D6 SP\nClimbing Gear", "D6 SP\nD3 Revolvers"] },
+            { row: "9", cols: ["D6+3 SP\nD3+1 Med Supplies", "D6+3 SP\nThrown Explosive", "D6+3 SP", "D6+3 SP\nHunting Bow", "D6+3 SP\nHigh-Power Rifle"] },
+            { row: "10", cols: ["D3+3 SP\nD3+1 Silencers", "D6+3 SP\nScope", "D6+3 SP\nHeavy Club", "D6+3 SP\nFire Bomb", "D6+3 SP\nHunting Rifle w/ Scope"] },
+            { row: "11", cols: ["D6+6 SP\nSquad Auto Weapon", "D6+6 SP\nNoisemaker", "D6+6 SP", "D6+6 SP\nPump Shotgun", "D6+6 SP\nD3 Hunting Rifles"] },
+            { row: "12", cols: ["D6+6 SP\nAssault Armour", "D6+6 SP\nMilitary SMG", "D6+6 SP\nRiot Shield", "D6+6 SP\nMod-Kit", "D6+6 SP\nD3 Mod Kits"] }
         ];
 
         const initialSquad = [
@@ -1082,18 +1095,51 @@
                       <table className="w-full text-left border-collapse min-w-[600px] bg-black/80">
                         <thead>
                           <tr className="bg-black stencil text-red-500 tracking-wider text-sm border-b border-red-900/50">
-                            <th className="p-2 pl-3 w-48">Roll Result</th>
+                            <th className="p-2 pl-3 w-20 text-center">Roll</th>
+                            <th className="p-2 w-48">Result</th>
                             <th className="p-2 w-32">Stat Penalty</th>
                             <th className="p-2">Effect Description</th>
                           </tr>
                         </thead>
                         <tbody className="font-mono text-xs text-red-300">
                           {INJURY_TABLE.map((inj) => (
-                              <tr key={inj.name} className="border-b border-red-900/20 hover:bg-red-950/40 transition-colors">
+                              <tr key={inj.roll} className="border-b border-red-900/20 hover:bg-red-950/40 transition-colors">
+                                <td className="p-2 text-center text-white border-r border-red-900/40 bg-red-950/50 font-bold">{inj.roll}</td>
                                 <td className="p-2 pl-3 font-bold stencil tracking-wider text-sm text-red-400">{inj.name}</td>
-                                <td className="p-2">{inj.effect === 'NONE' || inj.effect === 'KIA' ? <span className="text-stone-500">-</span> : <span className="bg-red-900 text-white px-1.5 py-0.5 rounded-sm">{inj.penalty} {inj.effect}</span>}</td>
+                                <td className="p-2">{inj.effect === 'None' || inj.effect === 'KIA' ? <span className="text-stone-500">{inj.effect}</span> : <span className="bg-red-900 text-white px-1.5 py-0.5 rounded-sm">{inj.penalty !== '-' ? inj.penalty + ' ' : ''}{inj.effect}</span>}</td>
                                 <td className="p-2 text-[10px] text-red-400/80 leading-tight">{inj.desc}</td>
                               </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* SUPPLY TABLE */}
+                    <div className="mb-4 overflow-x-auto border border-blue-900/50 rounded-sm">
+                      <h3 className="stencil uppercase tracking-wider text-lg text-blue-400 m-0 p-3 bg-blue-950/30 border-b border-blue-900/50 flex items-center gap-2">
+                        <Activity size={18} /> Supply / Loot Table (2D6 Across & Down)
+                      </h3>
+                      <table className="w-full text-center border-collapse min-w-[700px] bg-black/80">
+                        <thead>
+                          <tr className="bg-black stencil text-blue-400 tracking-wider text-sm border-b border-blue-900/50">
+                            <th className="p-2 w-16 border-r border-blue-900/50">Roll</th>
+                            <th className="p-2">2-3</th>
+                            <th className="p-2">4-5</th>
+                            <th className="p-2">6-8</th>
+                            <th className="p-2">9-10</th>
+                            <th className="p-2 w-40">11-12</th>
+                          </tr>
+                        </thead>
+                        <tbody className="font-mono text-[9px] text-blue-300">
+                          {SUPPLY_TABLE.map((row) => (
+                            <tr key={row.row} className="border-b border-blue-900/20 hover:bg-blue-950/40 transition-colors">
+                              <td className="p-2 font-bold text-white text-sm bg-blue-950/50 border-r border-blue-900/50">{row.row}</td>
+                              {row.cols.map((col, idx) => (
+                                <td key={idx} className="p-2 border-r border-blue-900/20 last:border-0 leading-tight aligns-middle align-middle">
+                                  {col.split('\n').map((line, i) => <div key={i} className={i===0 ? "text-[10px] text-blue-400 mb-0.5 font-bold" : "text-green-400 stencil tracking-wider text-[12px] uppercase"}>{line}</div>)}
+                                </td>
+                              ))}
+                            </tr>
                           ))}
                         </tbody>
                       </table>
