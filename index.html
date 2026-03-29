@@ -231,9 +231,12 @@
           "Surplus SMG": { type: "Ranged", range: 12, fa: 3, str: 3, cap: "6" },
           "Modern SMG": { type: "Ranged", range: 18, fa: 3, str: 3, cap: "8" },
           "Hunting Rifle": { type: "Ranged", range: 24, fa: 1, str: 3, cap: "6" },
+          "High-powered Rifle": { type: "Ranged", range: 30, fa: 1, str: 4, cap: "4" },
+          "Surplus Assault Rifle": { type: "Ranged", range: 18, fa: 2, str: 4, cap: "10" },
           "Sniper Rifle": { type: "Ranged", range: 30, fa: 1, str: 4, cap: "6" },
           "Military Assault Rifle": { type: "Ranged", range: 24, fa: 3, str: 4, cap: "12" },
           "LMG": { type: "Ranged", range: 24, fa: 4, str: 5, cap: "15" },
+          "Minigun": { type: "Ranged", range: 18, fa: 6, str: 5, cap: "20" },
           "Grenade Launcher": { type: "Ranged", range: 24, fa: 1, str: 5, cap: "1" },
           "Rocket Launcher": { type: "Ranged", range: 36, fa: 1, str: 8, cap: "1" },
           "Flamethrower": { type: "Ranged", range: 8, fa: 1, str: 4, cap: "10" },
@@ -448,9 +451,12 @@
           "Surplus SMG": "Ranged Weapon. Range: 12”, FA Modifier: +3, Strength: 3. Reload: 6.",
           "Modern SMG": "Ranged Weapon. Range: 18”, FA Modifier: +3, Strength: 3. Reload: 8.",
           "Hunting Rifle": "Ranged Weapon. Range: 24”, FA Modifier: +1, Strength: 3. Reload: 6.",
+          "High-powered Rifle": "Ranged Weapon. Range: 30”, FA Modifier: +1, Strength: 4. Rules: Noisy 1. Reload: 4.",
+          "Surplus Assault Rifle": "Ranged Weapon. Range: 18”, FA Modifier: +2, Strength: 4. Rules: Noisy 1. Reload: 10.",
           "Sniper Rifle": "Ranged Weapon. Range: 30”, FA Modifier: +1, Strength: 4. Rules: Noisy 1, Lobotomizer 1, Highly Specialized. Reload: 6.",
           "Military Assault Rifle": "Ranged Weapon. Range: 24”, FA Modifier: +3, Strength: 4. Reload: 12.",
           "LMG": "Ranged Weapon. Range: 24”, FA Modifier: +4, Strength: 5. Rules: Noisy 1, Heavy 1, Slow Reload, Highly Specialized. Reload: 15.",
+          "Minigun": "Ranged Weapon. Range: 18”, FA Modifier: +6, Strength: 5. Rules: Noisy 2, Heavy 2, Slow Reload, Highly Specialized. Reload: 20.",
           "Grenade Launcher": "Ranged Weapon. Explosive. Strength: 4. Rules: Explosive 3, One-Use, Thrown, Noisy 2.",
           "Rocket Launcher": "Ranged Weapon. Explosive. Strength: 5. Rules: Explosive 4, One-Use, Heavy 2.",
           "Flamethrower": "Ranged Weapon. Range: 8”, FA Modifier: +2, Strength: 4. Rules: Fire.",
@@ -1359,6 +1365,7 @@
                                <option>Selfless</option>
                                <option>Neutral</option>
                                <option>Selfish</option>
+                               <option>Trained</option>
                              </select>
                              <select value={recruitType} onChange={e => setRecruitType(e.target.value)} className="flex-1 bg-green-950/30 border border-green-800/80 text-green-300 text-sm rounded-sm p-2 focus:outline-none focus:border-red-800 stencil tracking-wider active:bg-green-900/40">
                                {Object.keys(CHARACTER_ARCHETYPES).map(t => <option key={t} value={t}>{t}</option>)}
