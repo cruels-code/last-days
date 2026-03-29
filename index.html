@@ -187,6 +187,7 @@
         const Wrench = p => <Icon {...p} path='<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>' />;
         const Trash2 = p => <Icon {...p} path='<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>' />;
         const AlertTriangle = p => <Icon {...p} path='<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>' />;
+        const BookOpen = p => <Icon {...p} path='<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>' />;
         const Download = p => <Icon {...p} path='<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>' />;
         const Upload = p => <Icon {...p} path='<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>' />;
         const Undo2 = p => <Icon {...p} path='<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/>' />;
@@ -225,6 +226,7 @@
         const WEAPON_DATA = {
           "Handgun": { type: "Ranged", range: 12, fa: 2, str: 3, cap: "10" },
           "Revolver": { type: "Ranged", range: 12, fa: 1, str: 3, cap: "6" },
+          "Magnum": { type: "Ranged", range: 12, fa: 1, str: 4, cap: "6" },
           "Pump Action Shotgun": { type: "Ranged", range: 18, fa: 1, str: 6, cap: "5" },
           "Double Barrel Shotgun": { type: "Ranged", range: 9, fa: 1, str: 6, cap: "2" },
           "Sawn-Off Shotgun": { type: "Ranged", range: 9, fa: 1, str: 6, cap: "2" },
@@ -279,6 +281,7 @@
           "Head Hunter",
           "Quickload",
           "Rallying Cry",
+          "Scavenger",
           "Situational Awareness",
           "Sprinter",
           "Stalker",
@@ -412,7 +415,7 @@
           "Animal": "Cannot carry items, open doors, or use equipment.",
           "Tactical Acumen": "Once per game, you may re-roll a Priority roll.",
           "Gunsmith": "Can repair jammed firearms without needing a Workshop.",
-          "Scavenger": "May re-roll the D6 when searching a Supply Token.",
+          "Scavenger": "If they carried a Supply Token off the board, modify one of the two rolls on the Scavenge chart by +1/-1.",
           
           // Skill Trees
           "Firearms": "Unlocks access to the Firearms Skill Tree.",
@@ -445,6 +448,7 @@
           // Equipment 
           "Handgun": "Ranged Weapon. Range: 12”, FA Modifier: +2, Strength: 3. Reload: 10.",
           "Revolver": "Ranged Weapon. Range: 12”, FA Modifier: +1, Strength: 3. Reload: 6.",
+          "Magnum": "Ranged Weapon. Range: 12”, FA Modifier: +1, Strength: 4. Rules: Noisy 1. Reload: 6.",
           "Pump Action Shotgun": "Ranged Weapon. Range: 6/12/18”, FA Modifier: +1, Strength: 6/4/3. Rules: Stepped Fire, Point Blank. Reload: 5.",
           "Double Barrel Shotgun": "Ranged Weapon. Range: 3/6/9”, FA Modifier: +1, Strength: 6/4/2. Rules: Stepped Fire, Point Blank. Reload: 2.",
           "Sawn-Off Shotgun": "Ranged Weapon. Range: 3/6/9”, FA Modifier: +1, Strength: 6/4/2. Rules: Stepped Fire, Point Blank. Reload: 2.",
@@ -543,6 +547,7 @@
         // --- MAIN APPLICATION ---
         function App() {
           const [mode, setMode] = useState('tactical');
+          const [showHelp, setShowHelp] = useState(false);
           const [squadName, setSquadName] = useState("The Devonshire Rippers");
           
           const [history, setHistory] = useState([{
@@ -906,6 +911,130 @@
                 </div>
               )}
 
+              {showHelp && (
+                <div className="absolute inset-0 z-50 bg-black/95 overflow-y-auto custom-scrollbar p-2 sm:p-6 flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
+                  <div className="w-full max-w-5xl bg-green-950/30 border border-green-800/80 rounded-sm p-4 sm:p-6 shadow-[0_0_30px_rgba(74,222,128,0.1)] relative my-4 sm:my-10 backdrop-blur-sm">
+                    <div className="flex items-center justify-between mb-6 text-green-500 border-b border-green-900/80 pb-4">
+                      <div className="flex items-center gap-3">
+                        <BookOpen size={24} />
+                        <h2 className="stencil uppercase tracking-widest text-xl sm:text-2xl text-blue-400">Rules Reference</h2>
+                      </div>
+                      <button onClick={() => setShowHelp(false)} className="px-4 py-2 bg-red-950/50 border border-red-900/80 text-red-400 hover:bg-red-900 hover:text-white rounded-sm stencil uppercase transition-all flex items-center gap-2 shadow-sm">
+                        <span className="hidden sm:inline">Close Guide</span> <span className="text-xl leading-none">&times;</span>
+                      </button>
+                    </div>
+                    
+                    {/* TURN SEQUENCE */}
+                    <div className="mb-8 bg-black/50 p-4 border border-amber-900/30 rounded-sm">
+                      <h3 className="stencil uppercase tracking-wider text-lg text-amber-500 mb-3 border-b border-amber-900/50 pb-1 flex items-center gap-2">
+                        <span className="bg-amber-500 text-black px-2 py-0.5 rounded-sm text-sm">1</span> The Core Turn Sequence
+                      </h3>
+                      <ol className="list-decimal pl-5 font-mono text-sm text-green-300 space-y-3">
+                        <li><strong className="text-amber-400 stencil tracking-wider uppercase">The Menace Phase:</strong> Resolve Noise Tokens; zombies activate, moving towards the loudest noises and attacking if in range.</li>
+                        <li><strong className="text-green-400 stencil tracking-wider uppercase">The Action Phase:</strong> Characters maneuver and perform critical actions (e.g., move, scavenge, interact). AP is regenerated.</li>
+                        <li><strong className="text-blue-400 stencil tracking-wider uppercase">The Shooting Phase:</strong> Non-engaged, Lock-and-Loaded characters resolve Ranged Attacks with firearms.</li>
+                        <li><strong className="text-red-400 stencil tracking-wider uppercase">The Close Quarters Combat Phase:</strong> All models engaged in base contact roll off and fight in desperate melee combat.</li>
+                        <li><strong className="text-stone-400 stencil tracking-wider uppercase">The End Phase:</strong> Check for Breaking Points, remove temporary status tokens, and check scenario end conditions.</li>
+                      </ol>
+                    </div>
+
+                    {/* RANGED WEAPONS */}
+                    <div className="mb-8 overflow-x-auto border border-green-900/80 rounded-sm">
+                      <h3 className="stencil uppercase tracking-wider text-lg text-blue-400 m-0 p-3 bg-green-950/50 border-b border-green-900/80 flex items-center gap-2">
+                        <Crosshair size={18} /> Firearms & Ranged Weapons Table
+                      </h3>
+                      <table className="w-full text-left border-collapse min-w-[600px] bg-black/80">
+                        <thead>
+                          <tr className="bg-black stencil text-green-500 tracking-wider text-sm border-b border-green-800/80">
+                            <th className="p-2 pl-3">Weapon Name</th>
+                            <th className="p-2 text-center">Range</th>
+                            <th className="p-2 text-center">FA</th>
+                            <th className="p-2 text-center">Str</th>
+                            <th className="p-2 text-center">Ammo Cap</th>
+                            <th className="p-2 w-1/3">Rules Summary</th>
+                          </tr>
+                        </thead>
+                        <tbody className="font-mono text-xs text-green-300">
+                          {Object.entries(WEAPON_DATA).filter(([_, w]) => w.type === 'Ranged').map(([name, w]) => {
+                             const tooltip = TOOLTIPS[name] || "";
+                             const rulesMatch = tooltip.match(/Rules: (.*?)(?:\. Reload|\. Ammo|$)/);
+                             const rulesText = rulesMatch ? rulesMatch[1] : "None";
+                             return (
+                              <tr key={name} className="border-b border-green-900/40 hover:bg-green-900/40 transition-colors">
+                                <td className="p-2 pl-3 font-bold text-green-400 stencil tracking-wider text-sm">{name}</td>
+                                <td className="p-2 text-center">{w.range}”</td>
+                                <td className="p-2 text-center">{w.fa > 0 ? '+'+w.fa : w.fa}</td>
+                                <td className="p-2 text-center text-red-300">{w.str}</td>
+                                <td className="p-2 text-center text-blue-400">{w.cap}</td>
+                                <td className="p-2 text-[10px] text-green-500/80 leading-tight">{rulesText}</td>
+                              </tr>
+                             )
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* CQC WEAPONS */}
+                    <div className="mb-8 overflow-x-auto border border-green-900/80 rounded-sm">
+                      <h3 className="stencil uppercase tracking-wider text-lg text-red-400 m-0 p-3 bg-green-950/50 border-b border-green-900/80 flex items-center gap-2">
+                        <Swords size={18} /> Close Quarters Combat Weapons
+                      </h3>
+                      <table className="w-full text-left border-collapse min-w-[600px] bg-black/80">
+                        <thead>
+                          <tr className="bg-black stencil text-green-500 tracking-wider text-sm border-b border-green-800/80">
+                            <th className="p-2 pl-3">Weapon Name</th>
+                            <th className="p-2 text-center">CQC Mod</th>
+                            <th className="p-2 text-center">Str Mod</th>
+                            <th className="p-2 w-1/2">Rules Summary</th>
+                          </tr>
+                        </thead>
+                        <tbody className="font-mono text-xs text-green-300">
+                          {Object.entries(WEAPON_DATA).filter(([_, w]) => w.type === 'Melee').map(([name, w]) => {
+                             const tooltip = TOOLTIPS[name] || "";
+                             const rulesMatch = tooltip.match(/Rules: (.*?)(?:\. Ammo|$)/);
+                             const rulesText = rulesMatch ? rulesMatch[1] : "None";
+                             return (
+                              <tr key={name} className="border-b border-green-900/40 hover:bg-green-900/40 transition-colors">
+                                <td className="p-2 pl-3 font-bold text-red-400 stencil tracking-wider text-sm">{name}</td>
+                                <td className="p-2 text-center text-amber-300">{w.cqc > 0 ? '+'+w.cqc : (w.cqc === 0 ? '-' : w.cqc)}</td>
+                                <td className="p-2 text-center text-red-300">+{w.str}</td>
+                                <td className="p-2 text-[10px] text-green-500/80 leading-tight">{rulesText}</td>
+                              </tr>
+                             )
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* INJURY TABLE */}
+                    <div className="mb-4 overflow-x-auto border border-red-900/50 rounded-sm">
+                      <h3 className="stencil uppercase tracking-wider text-lg text-red-500 m-0 p-3 bg-red-950/30 border-b border-red-900/50 flex items-center gap-2">
+                        <Activity size={18} /> Post-Game Injuries (2D6)
+                      </h3>
+                      <table className="w-full text-left border-collapse min-w-[600px] bg-black/80">
+                        <thead>
+                          <tr className="bg-black stencil text-red-500 tracking-wider text-sm border-b border-red-900/50">
+                            <th className="p-2 pl-3 w-48">Roll Result</th>
+                            <th className="p-2 w-32">Stat Penalty</th>
+                            <th className="p-2">Effect Description</th>
+                          </tr>
+                        </thead>
+                        <tbody className="font-mono text-xs text-red-300">
+                          {INJURY_TABLE.map((inj) => (
+                              <tr key={inj.name} className="border-b border-red-900/20 hover:bg-red-950/40 transition-colors">
+                                <td className="p-2 pl-3 font-bold stencil tracking-wider text-sm text-red-400">{inj.name}</td>
+                                <td className="p-2">{inj.effect === 'NONE' || inj.effect === 'KIA' ? <span className="text-stone-500">-</span> : <span className="bg-red-900 text-white px-1.5 py-0.5 rounded-sm">{inj.penalty} {inj.effect}</span>}</td>
+                                <td className="p-2 text-[10px] text-red-400/80 leading-tight">{inj.desc}</td>
+                              </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                  </div>
+                </div>
+              )}
+
               <header className="flex-none p-2 md:p-3 border-b-2 border-red-900/40 bg-green-950/30/80 shadow-md z-10 flex flex-wrap justify-between items-center gap-2 relative">
                 <div className=" absolute bottom-0 left-0 w-full h-1 opacity-50"></div>
                 <div className="flex-1 min-w-0 pr-2">
@@ -932,6 +1061,9 @@
                   </div>
 
                   <div className="flex border-r border-green-800/80 pr-2 mr-1 gap-1">
+                    <button onClick={() => setShowHelp(true)} title="Rules Reference" className="flex items-center justify-center px-2 py-2 md:py-1.5 bg-black hover:bg-green-900/40 active:scale-95 text-blue-400 rounded-sm stencil text-xs border border-blue-900/80 shadow-md shadow-blue-900/20 transition-all ">
+                      <BookOpen size={16} className="lg:mr-1" /> <span className="hidden lg:inline uppercase mt-0.5">Rules</span>
+                    </button>
                     <button onClick={handleExportBackup} title="Backup Data" className="flex items-center justify-center px-2 py-2 md:py-1.5 bg-black hover:bg-green-900/40 active:scale-95 text-green-500 rounded-sm stencil text-xs border border-green-900/80 transition-all ">
                       <Download size={16} className="lg:mr-1" /> <span className="hidden lg:inline uppercase">Backup</span>
                     </button>
