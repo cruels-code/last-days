@@ -136,27 +136,9 @@
             pointer-events: none;
         }
 
-        /* Screen flicker */
-        @keyframes flicker {
-            0% { opacity: 0.95; }
-            5% { opacity: 0.85; }
-            10% { opacity: 0.95; }
-            15% { opacity: 1; }
-            100% { opacity: 1; }
-        }
+        /* Screen flicker removed per request */
         body::after {
-            content: " ";
-            display: block;
-            position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
-            background: rgba(74, 222, 128, 0.02);
-            opacity: 0;
-            z-index: 2;
-            pointer-events: none;
-            animation: flicker 0.15s infinite;
+            display: none;
         }
         
         .stencil, .typewriter {
@@ -979,11 +961,12 @@
                         const hasInjuries = char.injuries && char.injuries.length > 0;
 
                         return (
-                          <div key={char.id} className={`flex flex-col relative rounded-sm overflow-hidden border transition-all duration-200 hud-border ${isActuallyOut ? 'bg-black border-red-950/50 grayscale opacity-80 hud-border-danger' : char.overwatch ? 'bg-green-950/30 border-amber-500/80 shadow-md' : 'bg-green-950/30 border-green-800/80 shadow-lg'}`}>
+                          <div key={char.id} className={`flex flex-col relative rounded-sm overflow-hidden border transition-all duration-200 hud-border ${isActuallyOut ? 'bg-black border-red-950/50 grayscale opacity-80 hud-border-danger' : char.overwatch ? 'bg-amber-950/40 border-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.3)] z-10' : 'bg-green-950/30 border-green-800/80 shadow-lg'}`}>
                             {isActuallyOut && (
-                              <div className="absolute inset-0 bg-red-950/30 z-20 flex flex-col items-center justify-center backdrop-blur-[2px]">
+                              <div className="absolute inset-0 bg-red-950/30 z-20 flex flex-col items-center justify-center backdrop-blur-[2px] cursor-pointer hover:bg-red-950/50 transition-colors" onClick={() => toggleOOA(char.id)}>
                                 <Skull size={48} className="text-red-600 mb-1 opacity-90 drop-shadow-md" />
                                 <span className="text-xl stencil text-red-600 tracking-widest uppercase outline-text bg-black/50 px-2 rounded text-center leading-tight ">OUT OF ACTION</span>
+                                <span className="text-[10px] text-red-400 mt-2 font-mono uppercase bg-black/80 px-2 py-0.5 rounded-sm">Click to Remove</span>
                               </div>
                             )}
                             
@@ -998,13 +981,13 @@
                               <div className="flex items-center gap-1.5 flex-none">
                                 <button 
                                   onClick={() => toggleOOA(char.id)}
-                                  className={`p-2 rounded-sm border transition-all active:scale-95 ${isActuallyOut ? 'bg-red-600 border-red-500 text-white' : 'bg-green-900/40 border-green-800/80 text-green-600/80 hover:text-red-500'}`}
+                                  className={`p-2 rounded-sm border transition-all active:scale-95 z-30 relative ${isActuallyOut ? 'bg-red-600 border-red-500 text-white' : 'bg-green-900/40 border-green-800/80 text-green-600/80 hover:text-red-500'}`}
                                   title="Toggle Out of Action Status"
                                 >
                                   <Skull size={14} />
                                 </button>
-                                <button onClick={() => !isActuallyOut && toggleOverwatch(char.id)} disabled={isActuallyOut} className={`flex items-center gap-1.5 px-3 py-2 rounded-sm stencil text-xs uppercase tracking-wider transition-all active:scale-95  ${char.overwatch ? 'bg-amber-500/20 text-amber-500 border border-amber-500/50' : 'bg-green-900/40 text-green-600/80 border border-green-800/80 hover:bg-green-800/50 hover:text-green-400'}`}>
-                                  <Crosshair size={14} className={char.overwatch ? 'animate-pulse' : ''} /> {char.overwatch ? 'Watching' : 'Overwatch'}
+                                <button onClick={() => !isActuallyOut && toggleOverwatch(char.id)} disabled={isActuallyOut} className={`flex items-center gap-1.5 px-2 sm:px-3 py-2 rounded-sm stencil text-xs uppercase tracking-wider transition-all active:scale-95 whitespace-nowrap ${char.overwatch ? 'bg-amber-500 text-black font-bold border border-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.8)]' : 'bg-green-900/40 text-green-600/80 border border-green-800/80 hover:bg-green-800/50 hover:text-green-400'}`}>
+                                  <Crosshair size={14} className={char.overwatch ? 'animate-pulse text-black' : ''} /> {char.overwatch ? 'LOCKED & LOADED' : 'Overwatch'}
                                 </button>
                               </div>
                             </div>
@@ -1316,9 +1299,32 @@
                     </div>
 
                     <div className="flex-none lg:flex-1 flex flex-col gap-2 min-h-[500px] lg:min-h-0 overflow-y-auto custom-scrollbar border border-green-900/80 bg-green-950/30 rounded-sm p-3">
-                      <div className="flex items-center gap-2 mb-2 text-green-500 border-b border-green-900/80 pb-2 relative">
-                        <div className=" absolute bottom-0 left-0 w-full h-1 opacity-30"></div>
-                        <UserPlus size={18} /> <h2 className="stencil uppercase tracking-wider text-sm ">Squad Directory</h2>
+                      <div className="flex items-center justify-between mb-2 text-green-500 border-b border-green-900/80 pb-2 relative">
+                        <div className="flex items-center gap-2">
+                          <div className=" absolute bottom-0 left-0 w-full h-1 opacity-30"></div>
+                          <UserPlus size={18} /> <h2 className="stencil uppercase tracking-wider text-sm ">Squad Directory</h2>
+                        </div>
+                        <button 
+                          onClick={() => {
+                            setConfirmDialog({
+                              message: "Are you sure you want to create a new squad? This will WIPE your current roster, base upgrades, and stash, and set your Scavenge Points to 100 for a fresh Campaign start.",
+                              onConfirm: () => {
+                                pushState({
+                                  squad: [],
+                                  stash: [],
+                                  baseType: Object.keys(BASE_TYPES)[0],
+                                  baseUpgrades: [],
+                                  scavengePoints: 100
+                                });
+                                setSquadName("NEW SQUAD");
+                                setConfirmDialog(null);
+                              }
+                            });
+                          }}
+                          className="flex items-center gap-1.5 px-3 py-1 bg-red-950 hover:bg-red-900 active:scale-95 text-red-300 rounded-sm stencil text-xs uppercase transition-all border border-red-900 shadow-sm whitespace-nowrap"
+                        >
+                          <UserPlus size={14} /> New Squad
+                        </button>
                       </div>
                       
                       <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1.5 min-h-[150px]">
