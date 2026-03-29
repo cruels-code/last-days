@@ -552,7 +552,8 @@
         const INITIAL_SQUADS = {
           "dartmoor": {
             squadName: "Dartmoor Corpse Cleavers",
-            baseType: 'The Prison',
+            baseType: 'The Gun Shop',
+            scavengePoints: 13,
             characters: [
               { id: 1, name: "Arthur", type: "Everyday Hero", keyword: "Selfless", level: 2, experience: 3, stats: { AP: 6, CQC: 4, FA: 3, S: 3, E: 4, DC: 3, C: 5, I: 3 }, equipment: ["Military Assault Rifle", "Heavy Blade", "Tactical Vest(+2E vs shots)"], specialRules: ["Leader", "Headhunter"], skills: ["Leader", "Firearms", "CQC", "Academic"], damage: 0, ammo: 0, noise: 0, overwatch: false, loot: 0, heavyLoot: 0, kills: 0, ooaManual: false, recovering: false, injuries: [], image: null },
               { id: 2, name: "Callum", type: "Firefighter", keyword: "Selfless", level: 2, experience: 7, stats: { AP: 8, CQC: 4, FA: 3, S: 3, E: 3, DC: 3, C: 4, I: 3 }, equipment: ["Heavy Club", "Semi-Automatic", "Climbing Gear"], specialRules: ["Heavy Lifter", "Entry Man", "Freerunner"], skills: ["CQC", "Athletic"], damage: 0, ammo: 0, noise: 0, overwatch: false, loot: 0, heavyLoot: 0, kills: 0, ooaManual: false, recovering: false, injuries: [], image: null },
@@ -564,7 +565,10 @@
           },
           "devon": {
             squadName: "Devon United Militia Brigade",
-            baseType: 'The Farm House',
+            baseType: 'The Mall',
+            baseUpgrades: ["Infirmary"],
+            scavengePoints: 5,
+            stash: ["Revolver", "Revolver", "Knife", "Knife"],
             characters: [
               { id: 1, name: "Hugh Jarce", type: "Everyday Hero", keyword: "Selfless", level: 1, experience: 7, stats: { AP: 6, CQC: 5, FA: 3, S: 3, E: 3, DC: 3, C: 4, I: 3 }, equipment: ["Semi-Automatic", "Heavy Blade"], specialRules: ["Leader"], skills: ["Leader", "Firearms", "CQC", "Academic"], damage: 0, ammo: 0, noise: 0, overwatch: false, loot: 0, heavyLoot: 0, kills: 0, ooaManual: false, recovering: false, injuries: [], image: null },
               { id: 2, name: "Brock Lee", type: "Good Samaritan", keyword: "Selfless", level: 2, experience: 0, stats: { AP: 6, CQC: 3, FA: 3, S: 4, E: 3, DC: 3, C: 3, I: 3 }, equipment: ["Semi-Automatic", "Knife"], specialRules: ["Inspirational Presence", "Scavenger"], skills: ["CQC", "Academic"], damage: 0, ammo: 0, noise: 0, overwatch: false, loot: 0, heavyLoot: 0, kills: 0, ooaManual: false, recovering: false, injuries: [], image: null },
@@ -584,9 +588,9 @@
                 squadName: data.squadName,
                 squad: data.characters,
                 baseType: data.baseType,
-                baseUpgrades: [],
-                scavengePoints: 0,
-                stash: []
+                baseUpgrades: data.baseUpgrades || [],
+                scavengePoints: data.scavengePoints || 0,
+                stash: data.stash || []
               }],
               historyIndex: 0
             };
