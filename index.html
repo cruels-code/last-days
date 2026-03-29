@@ -580,7 +580,20 @@
           }
         };
 
+        const LOCAL_STORAGE_KEY = 'ldza_squad_saves_v2';
+
         const generateInitialSaves = () => {
+          try {
+            const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              // Ensure we don't load an empty object if user cleared cache but left the key
+              if (Object.keys(parsed).length > 0) return parsed;
+            }
+          } catch (e) {
+            console.warn("Failed to retrieve saves from local storage, falling back to defaults.", e);
+          }
+          
           const saves = {};
           for (const [key, data] of Object.entries(INITIAL_SQUADS)) {
             saves[key] = {
@@ -604,6 +617,15 @@
           
           const [saves, setSaves] = useState(generateInitialSaves);
           const [activeSaveId, setActiveSaveId] = useState(null);
+
+          React.useEffect(() => {
+            try {
+              localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(saves));
+            } catch (e) {
+              console.error("Failed to sync saves to localStorage - storage may be full.", e);
+            }
+          }, [saves]);
+
 
           const currentData = activeSaveId && saves[activeSaveId] ? saves[activeSaveId].history[saves[activeSaveId].historyIndex] : null;
           
