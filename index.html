@@ -1452,8 +1452,11 @@
                                     {char.name}
                                     {char.overwatch && !isActuallyOut && <Activity size={16} className="text-amber-500 animate-pulse shrink-0" title="Overwatch Active" />}
                                   </h2>
-                                  <p className="text-[10px] font-mono text-green-600/80 uppercase truncate">
-                                    Lvl {char.level} {char.type} <span className="text-red-700/80 mx-1">|</span> {char.keyword}
+                                  <p className="text-[10px] font-mono text-green-600/80 uppercase truncate leading-none">
+                                    Lvl {char.level} {char.type}
+                                  </p>
+                                  <p className="text-[9px] font-mono text-green-700/80 uppercase truncate mt-0.5 leading-none">
+                                    {char.keyword}
                                   </p>
                                 </div>
                               </div>
