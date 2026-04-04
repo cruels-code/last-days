@@ -619,21 +619,7 @@
           const fileInputRef = useRef(null);
           const notifTimeout = useRef(null);
 
-          const [isAuthenticated, setIsAuthenticated] = useState(false);
-          const [passwordInput, setPasswordInput] = useState('');
-
-          const handleLogin = (e) => {
-             e.preventDefault();
-             if (passwordInput === 'boobies') {
-                setIsAuthenticated(true);
-                setPasswordInput('');
-             } else {
-                if (notifTimeout.current) clearTimeout(notifTimeout.current);
-                setNotification("ACCESS DENIED: INVASION VECTOR BLOCKED");
-                notifTimeout.current = setTimeout(() => setNotification(null), 4000);
-                setPasswordInput('');
-             }
-          };
+          // Password auth requirement removed per user request
 
           const [newUpgrade, setNewUpgrade] = useState("");
           const [recruitName, setRecruitName] = useState("");
@@ -710,6 +696,14 @@
             notifTimeout.current = setTimeout(() => setNotification(null), 4000);
           };
 
+          const getBackupFileName = (name) => {
+            const firstWord = name.trim().split(' ')[0].replace(/[^a-zA-Z0-9]/gi, '').slice(0, 10);
+            const d = new Date();
+            const dateStr = String(d.getDate()).padStart(2, '0') + String(d.getMonth() + 1).padStart(2, '0') + String(d.getFullYear()).slice(-2);
+            const timeStr = String(d.getHours()).padStart(2, '0') + String(d.getMinutes()).padStart(2, '0');
+            return `${firstWord}_${dateStr}_${timeStr}.json`;
+          };
+
           const handleExportBackup = () => {
             const dataToSave = {
               version: "1.9",
@@ -720,19 +714,57 @@
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
-            link.download = `${squadName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_backup.json`;
+            link.download = getBackupFileName(squadName);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
-            showNotify("Backup file downloaded successfully.");
+            setNotification("Backup Exported");
+            if (notifTimeout.current) clearTimeout(notifTimeout.current);
+            notifTimeout.current = setTimeout(() => setNotification(null), 4000);
           };
 
-          const handleImportClick = () => {
+          const handleExportSpecificBackup = (saveId, e) => {
+            e.stopPropagation();
+            const specificData = saves[saveId].history[saves[saveId].historyIndex];
+            const dataToSave = {
+              version: "1.9",
+              timestamp: new Date().toISOString(),
+              squadName: specificData.squadName, squad: specificData.squad, baseType: specificData.baseType, baseUpgrades: specificData.baseUpgrades, scavengePoints: specificData.scavengePoints, stash: specificData.stash
+            };
+            const blob = new Blob([JSON.stringify(dataToSave, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = getBackupFileName(specificData.squadName);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            setNotification("Backup Exported");
+            if (notifTimeout.current) clearTimeout(notifTimeout.current);
+            notifTimeout.current = setTimeout(() => setNotification(null), 4000);
+          };
+
+          const handleDeleteSquad = (saveId, name, e) => {
+            e.stopPropagation();
             setConfirmDialog({
-              message: "WARNING: Restoring a backup will completely overwrite your current roster and base progress. Proceed?",
-              onConfirm: () => { fileInputRef.current?.click(); setConfirmDialog(null); }
+              message: `Permanently delete roster "${name}"? This cannot be undone.`,
+              onConfirm: () => {
+                setSaves(prev => {
+                  const updated = { ...prev };
+                  delete updated[saveId];
+                  return updated;
+                });
+                if (activeSaveId === saveId) setActiveSaveId(null);
+                setConfirmDialog(null);
+              }
             });
+          };
+
+
+          const handleImportClick = () => {
+            fileInputRef.current?.click();
           };
 
           const handleFileImport = (event) => {
@@ -760,15 +792,22 @@
                   if (migratedBaseType === 'Farmhouse') migratedBaseType = 'The Farm House';
                   if (!BASE_TYPES[migratedBaseType]) migratedBaseType = 'The Farm House';
 
-                  pushState({
+                  const restoredState = {
                     squadName: importedData.squadName || "RESTORED ROSTER",
                     squad: migratedSquad,
                     baseType: migratedBaseType,
                     baseUpgrades: importedData.baseUpgrades || [],
                     scavengePoints: importedData.scavengePoints || 0,
                     stash: importedData.stash || []
-                  });
-                  showNotify("Backup restored successfully into active slot.");
+                  };
+
+                  const newId = `squad_${Date.now()}`;
+                  setSaves(prev => ({
+                    ...prev,
+                    [newId]: { historyIndex: 0, history: [restoredState] }
+                  }));
+                  setActiveSaveId(newId);
+                  showNotify("Backup restored successfully.");
                   setMode('base');
                 } else {
                   showNotify("ERROR: Invalid or corrupted backup file format.");
@@ -1080,32 +1119,7 @@
 
           const selectedChar = squad.find(c => c.id === selectedCharId);
 
-          if (!isAuthenticated) return (
-             <div className="h-full w-full flex flex-col items-center justify-center bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-green-950/20 via-black to-black relative selection:bg-red-900 selection:text-white">
-                <div className="scanlines"></div>
-                <div className="vignette"></div>
-                
-                <div className="w-full max-w-md bg-black/80 border border-red-900/50 p-8 rounded-sm shadow-[0_0_40px_rgba(220,38,38,0.15)] backdrop-blur-md z-50 relative">
-                  <h1 className="text-3xl text-center stencil text-red-500 mb-8 border-b border-red-900/50 pb-4 tracking-widest flex justify-center items-center gap-3">
-                     <ShieldAlert size={28} className="animate-pulse" /> SYSTEM ENCRYPTED
-                  </h1>
-                  <form onSubmit={handleLogin} className="space-y-6">
-                     <div>
-                        <label className="block text-red-700 stencil uppercase text-sm mb-2 text-center tracking-widest">Verify Authorization Code</label>
-                        <input type="password" value={passwordInput} onChange={e=>setPasswordInput(e.target.value)} className="w-full bg-black border border-red-900 text-red-400 p-4 font-mono text-center text-lg tracking-[0.5em] focus:border-red-500 focus:outline-none placeholder-red-950 transition-colors" autoFocus />
-                     </div>
-                     <button type="submit" className="w-full bg-red-950/40 border border-red-900 text-red-400 hover:bg-red-900 hover:text-white p-3 stencil uppercase text-lg tracking-widest transition-all shadow-md active:scale-95">BREACH ARCHIVE</button>
-                  </form>
-                </div>
-
-                {notification && (
-                  <div className="absolute top-8 left-1/2 -translate-x-1/2 z-50 bg-red-600/90 text-white px-6 py-3 rounded-sm font-bold font-mono text-sm shadow-[0_0_20px_rgba(220,38,38,0.5)] flex items-center gap-2 transition-all animate-in slide-in-from-top-4">
-                    <AlertTriangle size={20} className="shrink-0 animate-pulse" /> 
-                    <span>{notification}</span>
-                  </div>
-                )}
-             </div>
-          );
+          // Auth removed
 
           return (
             <div className="h-full w-full flex flex-col relative selection:bg-red-900 selection:text-white">
@@ -1126,12 +1140,23 @@
                               <div className="text-green-300 text-lg stencil uppercase tracking-widest group-hover:text-amber-400">{s.squadName}</div>
                               <div className="text-stone-400 text-xs mt-1">Base: {s.baseType} &nbsp;|&nbsp; Active Members: {s.squad.filter(c=>!c.ooaManual && c.damage < c.stats.DC).length}/{s.squad.length} &nbsp;|&nbsp; SP: {s.scavengePoints}</div>
                             </div>
-                            <Activity size={20} className="text-green-800 group-hover:text-green-400" />
+                            <div className="flex items-center gap-2">
+                              <button onClick={(e) => handleExportSpecificBackup(saveId, e)} title="Export Backup" className="p-2 rounded-sm text-green-700 hover:text-white hover:bg-blue-900 border border-transparent hover:border-blue-500 transition-all flex items-center justify-center">
+                                <Download size={16} />
+                              </button>
+                              <button onClick={(e) => handleDeleteSquad(saveId, s.squadName, e)} title="Delete Roster" className="p-2 rounded-sm text-green-700 hover:text-white hover:bg-red-900 border border-transparent hover:border-red-500 transition-all flex items-center justify-center">
+                                <Trash2 size={16} />
+                              </button>
+                              <div className="text-green-800 group-hover:text-amber-500 p-2"><Activity size={20} /></div>
+                            </div>
                           </button>
                         );
                       })}
                       <button role="button" className="w-full text-left p-4 mt-8 border border-green-900 border-dashed rounded-sm hover:bg-green-900/10 hover:border-green-500 transition-all group flex justify-center items-center opacity-75 hover:opacity-100" onClick={() => { const id = `squad_${Date.now()}`; setSaves(prev => ({...prev, [id]: { historyIndex: 0, history: [{ squadName: "NEW SURVIVORS", squad: [], baseType: "The Farm House", baseUpgrades: [], scavengePoints: 0, stash: [] }] }})); setActiveSaveId(id); setMode('base'); }}>
                          <span className="text-green-500 stencil tracking-widest">+ Initialize New Local Roster</span>
+                      </button>
+                      <button role="button" className="w-full text-left p-4 mt-2 border border-blue-900 border-dashed rounded-sm hover:bg-blue-900/10 hover:border-blue-500 transition-all group flex justify-center items-center opacity-75 hover:opacity-100" onClick={handleImportClick}>
+                         <div className="flex gap-2 items-center"><Upload className="text-blue-500" size={16} /><span className="text-blue-500 stencil tracking-widest uppercase">Import Roster Backup</span></div>
                       </button>
                     </div>
                   </div>
@@ -1176,17 +1201,233 @@
                     </div>
                     
                     {/* TURN SEQUENCE */}
-                    <div className="mb-8 bg-black/50 p-4 border border-amber-900/30 rounded-sm">
-                      <h3 className="stencil uppercase tracking-wider text-lg text-amber-500 mb-3 border-b border-amber-900/50 pb-1 flex items-center gap-2">
-                        <span className="bg-amber-500 text-black px-2 py-0.5 rounded-sm text-sm">1</span> The Core Turn Sequence
+                    <div className="mb-6 bg-black/50 p-4 border border-amber-900/30 rounded-sm">
+                      <h3 className="stencil uppercase tracking-wider text-xl text-amber-500 mb-3 border-b border-amber-900/50 pb-1 flex items-center gap-2">
+                        <Activity size={20} /> The Phases
                       </h3>
                       <ol className="list-decimal pl-5 font-mono text-sm text-green-300 space-y-3">
-                        <li><strong className="text-amber-400 stencil tracking-wider uppercase">The Menace Phase:</strong> Resolve Noise Tokens; zombies activate, moving towards the loudest noises and attacking if in range.</li>
-                        <li><strong className="text-green-400 stencil tracking-wider uppercase">The Action Phase:</strong> Characters maneuver and perform critical actions (e.g., move, scavenge, interact). AP is regenerated.</li>
-                        <li><strong className="text-blue-400 stencil tracking-wider uppercase">The Shooting Phase:</strong> Non-engaged, Lock-and-Loaded characters resolve Ranged Attacks with firearms.</li>
-                        <li><strong className="text-red-400 stencil tracking-wider uppercase">The Close Quarters Combat Phase:</strong> All models engaged in base contact roll off and fight in desperate melee combat.</li>
-                        <li><strong className="text-stone-400 stencil tracking-wider uppercase">The End Phase:</strong> Check for Breaking Points, remove temporary status tokens, and check scenario end conditions.</li>
+                        <li><strong className="text-amber-400 stencil tracking-wider uppercase">1. The Menace Phase:</strong> (a) Resolve Noise Tokens, (b) Resolve Ammo Tokens, (c) Zombie Activation.</li>
+                        <li><strong className="text-green-400 stencil tracking-wider uppercase">2. The Action Phase:</strong> Aggressor activates first.</li>
+                        <li><strong className="text-blue-400 stencil tracking-wider uppercase">3. The Shooting Phase:</strong> Defender activates first.</li>
+                        <li><strong className="text-red-400 stencil tracking-wider uppercase">4. The CQC Phase:</strong> Aggressor activates first.</li>
+                        <li><strong className="text-stone-400 stencil tracking-wider uppercase">5. The End Phase</strong></li>
                       </ol>
+                    </div>
+
+                    {/* MOVEMENT ACTIONS TABLE */}
+                    <div className="mb-6 overflow-x-auto border border-green-900/80 rounded-sm shadow-md">
+                      <h3 className="stencil uppercase tracking-wider text-xl text-green-400 m-0 p-3 bg-green-950/50 border-b border-green-900/80 flex items-center gap-2">
+                        <Activity size={18} /> Movement Actions
+                      </h3>
+                      <table className="w-full text-left border-collapse min-w-[600px] bg-black/80">
+                        <thead>
+                          <tr className="bg-black stencil text-green-500 tracking-wider text-sm border-b border-green-800/80">
+                            <th className="p-2 pl-3 w-1/4">Action</th>
+                            <th className="p-2 w-1/4">AP Cost</th>
+                            <th className="p-2">Effect</th>
+                          </tr>
+                        </thead>
+                        <tbody className="font-mono text-xs text-green-300">
+                          <tr className="border-b border-green-900/40 hover:bg-green-900/40">
+                            <td className="p-2 pl-3 font-bold text-green-400 stencil tracking-wider">Move through Normal Terrain (*)</td>
+                            <td className="p-2 text-amber-400">1 Action Point</td>
+                            <td className="p-2 text-[10px] leading-tight">Move 1" in any direction. May enter Contact.</td>
+                          </tr>
+                          <tr className="border-b border-green-900/40 hover:bg-green-900/40">
+                            <td className="p-2 pl-3 font-bold text-green-400 stencil tracking-wider">Move through Difficult Terrain (*)</td>
+                            <td className="p-2 text-amber-400">2 Action Points</td>
+                            <td className="p-2 text-[10px] leading-tight">Move 1" in any direction. May enter Contact.</td>
+                          </tr>
+                          <tr className="border-b border-green-900/40 hover:bg-green-900/40">
+                            <td className="p-2 pl-3 font-bold text-green-400 stencil tracking-wider">Run</td>
+                            <td className="p-2 text-amber-400">1+ Action Points</td>
+                            <td className="p-2 text-[10px] leading-tight">Move AP expended x2 in inches (straight line only). Cannot shoot, generates 1 Noise. Limits to 1 per turn. May enter Contact.</td>
+                          </tr>
+                          <tr className="border-b border-green-900/40 hover:bg-green-900/40">
+                            <td className="p-2 pl-3 font-bold text-green-400 stencil tracking-wider">Break Contact with Enemy</td>
+                            <td className="p-2 text-amber-400">3 AP (+1 per extra enemy)</td>
+                            <td className="p-2 text-[10px] leading-tight">Move 1" directly away from the model(s) in Contact. Cannot perform if blocked.</td>
+                          </tr>
+                          <tr className="border-b border-green-900/40 hover:bg-green-900/40">
+                            <td className="p-2 pl-3 font-bold text-green-400 stencil tracking-wider">Jump / Fall (*)</td>
+                            <td className="p-2 text-amber-400">2 AP per inch of jump</td>
+                            <td className="p-2 text-[10px] leading-tight">Cross a raised gap. Do not measure before jumping. Falling deals Strength Damage = inches fallen. May enter contact through falling.</td>
+                          </tr>
+                          <tr className="border-b border-green-900/40 hover:bg-green-900/40">
+                            <td className="p-2 pl-3 font-bold text-green-400 stencil tracking-wider">Climb a Climbable Surface (*)</td>
+                            <td className="p-2 text-amber-400">2 AP per inch height</td>
+                            <td className="p-2 text-[10px] leading-tight">Move from one climbable level to the next.</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* MISC ACTIONS TABLE */}
+                    <div className="mb-6 overflow-x-auto border border-purple-900/80 rounded-sm shadow-md">
+                      <h3 className="stencil uppercase tracking-wider text-xl text-purple-400 m-0 p-3 bg-purple-950/50 border-b border-purple-900/80 flex items-center gap-2">
+                        <Wrench size={18} /> Miscellaneous Actions
+                      </h3>
+                      <table className="w-full text-left border-collapse min-w-[600px] bg-black/80">
+                        <thead>
+                          <tr className="bg-black stencil text-purple-500 tracking-wider text-sm border-b border-purple-800/80">
+                            <th className="p-2 pl-3 w-1/4">Action</th>
+                            <th className="p-2 w-1/4">AP Cost</th>
+                            <th className="p-2">Effect</th>
+                          </tr>
+                        </thead>
+                        <tbody className="font-mono text-xs text-purple-300">
+                          <tr className="border-b border-purple-900/40 hover:bg-purple-900/40">
+                            <td className="p-2 pl-3 font-bold text-purple-400 stencil tracking-wider">Open/Close a Door</td>
+                            <td className="p-2 text-amber-400">2 Action Points</td>
+                            <td className="p-2 text-[10px] leading-tight">The door becomes unblocked or blocked.</td>
+                          </tr>
+                          <tr className="border-b border-purple-900/40 hover:bg-purple-900/40">
+                            <td className="p-2 pl-3 font-bold text-purple-400 stencil tracking-wider">Reload a Firearm</td>
+                            <td className="p-2 text-amber-400">2 Action Points</td>
+                            <td className="p-2 text-[10px] leading-tight">Discard all Ammo tokens. Can be done voluntarily.</td>
+                          </tr>
+                          <tr className="border-b border-purple-900/40 hover:bg-purple-900/40">
+                            <td className="p-2 pl-3 font-bold text-purple-400 stencil tracking-wider">Go Locked and Loaded</td>
+                            <td className="p-2 text-amber-400">4 Action Points</td>
+                            <td className="p-2 text-[10px] leading-tight">Gain a Locked and Loaded Token. Cannot spend any more APs this phase.</td>
+                          </tr>
+                          <tr className="border-b border-purple-900/40 hover:bg-purple-900/40">
+                            <td className="p-2 pl-3 font-bold text-purple-400 stencil tracking-wider">Interact</td>
+                            <td className="p-2 text-amber-400">3 Action Points</td>
+                            <td className="p-2 text-[10px] leading-tight">Used for Objectives or picking up/passing Supplies. May not interract if hostile model in Contact.</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+                      {/* FA MODIFIER TABLE */}
+                      <div className="overflow-x-auto border border-blue-900/80 rounded-sm shadow-md">
+                        <h3 className="stencil uppercase tracking-wider text-lg text-blue-400 m-0 p-3 bg-blue-950/50 border-b border-blue-900/80 flex items-center gap-2">
+                          <Crosshair size={18} /> FA Skill Modifier
+                        </h3>
+                        <table className="w-full text-left border-collapse min-w-[300px] bg-black/80 h-full">
+                          <thead>
+                            <tr className="bg-black stencil text-blue-500 tracking-wider text-xs border-b border-blue-800/80">
+                              <th className="p-2 pl-3">Criteria</th>
+                              <th className="p-2 text-center w-20 whitespace-nowrap">Mod</th>
+                            </tr>
+                          </thead>
+                          <tbody className="font-mono text-xs text-blue-300">
+                            <tr className="border-b border-blue-900/40 hover:bg-blue-900/40">
+                              <td className="p-2 pl-3 text-[10px] leading-tight">The target is a Zombie</td>
+                              <td className="p-2 text-center text-green-400 font-bold text-sm">+1</td>
+                            </tr>
+                            <tr className="border-b border-blue-900/40 hover:bg-blue-900/40">
+                              <td className="p-2 pl-3 text-[10px] leading-tight">Target performed a Run action this turn</td>
+                              <td className="p-2 text-center text-red-500 font-bold text-sm">-1</td>
+                            </tr>
+                            <tr className="border-b border-blue-900/40 hover:bg-blue-900/40">
+                              <td className="p-2 pl-3 text-[10px] leading-tight">Target is in cover (obscured LoS)</td>
+                              <td className="p-2 text-center text-red-500 font-bold text-sm">-1</td>
+                            </tr>
+                            <tr className="border-b border-blue-900/40 hover:bg-blue-900/40">
+                              <td className="p-2 pl-3 text-[10px] leading-tight">Firing any Rate of Fire shots after first</td>
+                              <td className="p-2 text-center text-red-500 font-bold text-sm">-1</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      
+                      {/* CQC MODIFIER TABLE */}
+                      <div className="overflow-x-auto border border-red-900/80 rounded-sm shadow-md">
+                        <h3 className="stencil uppercase tracking-wider text-lg text-red-400 m-0 p-3 bg-red-950/50 border-b border-red-900/80 flex items-center gap-2">
+                          <Swords size={18} /> CQC Modifier
+                        </h3>
+                        <table className="w-full text-left border-collapse min-w-[300px] bg-black/80 h-full">
+                          <thead>
+                            <tr className="bg-black stencil text-red-500 tracking-wider text-xs border-b border-red-800/80">
+                              <th className="p-2 pl-3">Criteria</th>
+                              <th className="p-2 text-center w-20 whitespace-nowrap">Mod</th>
+                            </tr>
+                          </thead>
+                          <tbody className="font-mono text-xs text-red-300">
+                            <tr className="border-b border-red-900/40 hover:bg-red-900/40">
+                              <td className="p-2 pl-3 text-[10px] leading-tight">Attacking a Zombie</td>
+                              <td className="p-2 text-center text-green-400 font-bold text-sm">+1</td>
+                            </tr>
+                            <tr className="border-b border-red-900/40 hover:bg-red-900/40">
+                              <td className="p-2 pl-3 text-[10px] leading-tight">In contact with more than one hostile</td>
+                              <td className="p-2 text-center text-red-500 font-bold text-sm leading-tight">-1 per extra</td>
+                            </tr>
+                            <tr className="border-b border-red-900/40 hover:bg-red-900/40">
+                              <td className="p-2 pl-3 text-[10px] leading-tight">Weapon CQC Modifier</td>
+                              <td className="p-2 text-center text-amber-400 font-bold text-sm leading-tight">See Profile</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+                      {/* TOKEN SUMMARY */}
+                      <div className="overflow-x-auto border border-gray-700/80 rounded-sm shadow-md">
+                        <h3 className="stencil uppercase tracking-wider text-lg text-gray-300 m-0 p-3 bg-gray-900/50 border-b border-gray-700/80 flex items-center gap-2">
+                          <Activity size={18} /> Token Summary
+                        </h3>
+                        <table className="w-full text-left border-collapse min-w-[300px] bg-black/80 h-full">
+                          <tbody className="font-mono text-xs text-gray-300">
+                            <tr className="border-b border-gray-800/40 hover:bg-gray-800/40">
+                              <td className="p-2 pl-3 align-top">
+                                <span className="font-bold stencil text-white tracking-wider text-sm">Noise Token</span>
+                                <div className="text-[10px] leading-tight mt-1">
+                                  <span className="text-green-400 font-bold">Gained:</span> When weapon fires or Noisy triggers.<br/>
+                                  <span className="text-red-400 font-bold">Removed:</span> After 'Resolve Noise' next turn.
+                                </div>
+                              </td>
+                            </tr>
+                            <tr className="border-b border-gray-800/40 hover:bg-gray-800/40">
+                              <td className="p-2 pl-3 align-top">
+                                <span className="font-bold stencil text-white tracking-wider text-sm">Ammo Token</span>
+                                <div className="text-[10px] leading-tight mt-1">
+                                  <span className="text-green-400 font-bold">Gained:</span> For each shot fired from a Firearm.<br/>
+                                  <span className="text-red-400 font-bold">Removed:</span> After 'Reload a Firearm' action.
+                                </div>
+                              </td>
+                            </tr>
+                            <tr className="border-b border-gray-800/40 hover:bg-gray-800/40">
+                              <td className="p-2 pl-3 align-top border-none">
+                                <span className="font-bold stencil text-white tracking-wider text-sm">Knockback Token</span>
+                                <div className="text-[10px] leading-tight mt-1">
+                                  <span className="text-green-400 font-bold">Gained:</span> Zombie hit by Ranged and survives.<br/>
+                                  <span className="text-red-400 font-bold">Removed:</span> End of Zombie Activation phase.
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      
+                      {/* ZOMBIE STATS */}
+                      <div className="overflow-x-auto border border-green-900/80 rounded-sm shadow-md flex flex-col">
+                        <h3 className="stencil uppercase tracking-wider text-lg text-green-400 m-0 p-3 bg-red-950/30 border-b border-green-900/80 flex items-center gap-2">
+                          <Skull size={18} className="text-red-500" /> Zombie Reference
+                        </h3>
+                        <table className="w-full text-center border-collapse min-w-[300px] bg-black/80">
+                          <thead>
+                            <tr className="bg-black stencil text-green-500 tracking-wider text-xs border-b border-green-800/80">
+                              <th className="p-2">AP</th><th className="p-2">CQC</th><th className="p-2">FA</th><th className="p-2">S</th><th className="p-2">E</th>
+                              <th className="p-2">DC</th><th className="p-2">H</th><th className="p-2">I</th>
+                            </tr>
+                          </thead>
+                          <tbody className="font-mono text-sm text-amber-500 font-bold bg-gradient-to-b from-red-950/40 to-black/80">
+                            <tr className="border-b border-red-900/40">
+                              <td className="p-2">5</td><td className="p-2">2</td><td className="p-2">0</td><td className="p-2">3</td><td className="p-2">*</td>
+                              <td className="p-2">1</td><td className="p-2">3</td><td className="p-2">0</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        <div className="p-3 text-[10px] font-mono text-green-400/90 leading-tight space-y-2 bg-black/80 flex-grow border-t border-green-900/40">
+                          <p><strong className="text-red-400 stencil tracking-wider uppercase text-xs">Moving:</strong> Move towards nearest non-zombie model in LoS. If none in LoS, move towards closest model that tested for Noise. If none, do not move.</p>
+                          <p><strong className="text-red-400 stencil tracking-wider uppercase text-xs">Damaging:</strong> Roll 1D6 for damage. 5-6 = Hit to Head (1 damage). On Range Attack hit of 1-4, Zombie receives Knockback equal to weapon Knockback stat.</p>
+                          <p><strong className="text-red-400 stencil tracking-wider uppercase text-xs">Asterisk:</strong> Zombies (and Animals) can only perform actions marked with (*).</p>
+                        </div>
+                      </div>
                     </div>
 
                     {/* RANGED WEAPONS */}
