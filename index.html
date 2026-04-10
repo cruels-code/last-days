@@ -1751,7 +1751,7 @@
                               <div className="flex-none grid grid-cols-6 gap-1.5 p-2 border-t border-green-900/80 bg-green-950/30/30">
                               
                               <div className="flex flex-col items-center bg-black/50 border border-green-900/80 rounded-sm p-1.5">
-                                <div className="flex items-center gap-1 stencil text-[14px] tracking-wider text-red-500 mb-1.5">
+                                <div className="flex items-center gap-1 stencil text-[9px] tracking-wider text-red-500 mb-1.5">
                                   {isActuallyOut ? (
                                     <Flatline size={14} className="text-red-900" />
                                   ) : (
@@ -1767,7 +1767,7 @@
                               </div>
 
                               <div className={`flex flex-col items-center rounded-sm p-1.5 transition-all duration-300 border ${char.noise > 0 && char.noise === maxNoise && !isActuallyOut ? 'bg-red-950/60 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)] animate-pulse' : 'bg-black/50 border-green-900/80'}`}>
-                                <div className="flex items-center gap-1 stencil text-[14px] tracking-wider text-amber-500  mb-1.5"><Volume2 size={14} /> NOISE</div>
+                                <div className="flex items-center gap-1 stencil text-[9px] tracking-wider text-amber-500  mb-1.5"><Volume2 size={10} /> NOISE</div>
                                 <div className="flex items-center gap-1">
                                   <button onClick={() => updateCharacterState(char.id, 'noise', -1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Minus size={14}/></button>
                                   <span className={`text-xl stencil w-5 text-center leading-none ${char.noise > 0 ? 'text-amber-500 ' : 'text-green-500'}`}>{char.noise}</span>
@@ -1775,7 +1775,7 @@
                                 </div>
                               </div>
                               <div className="flex flex-col items-center bg-black/50 border border-green-900/80 rounded-sm p-1.5">
-                                <div className="flex items-center gap-1 stencil text-[14px] tracking-wider text-green-500  mb-1.5"><Skull size={14} /> Z-KILLS</div>
+                                <div className="flex items-center gap-1 stencil text-[9px] tracking-wider text-green-500  mb-1.5"><Skull size={10} /> Z-KILLS</div>
                                 <div className="flex items-center gap-1">
                                   <button onClick={() => updateCharacterState(char.id, 'zombieKills', -1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Minus size={14}/></button>
                                   <span className={`text-xl stencil w-5 text-center leading-none ${char.zombieKills > 0 ? 'text-red-500 ' : 'text-green-500'}`}>{char.zombieKills || 0}</span>
@@ -1783,7 +1783,7 @@
                                 </div>
                               </div>
                               <div className="flex flex-col items-center bg-black/50 border border-green-900/80 rounded-sm p-1.5">
-                                <div className="flex items-center gap-1 stencil text-[14px] tracking-wider text-green-500  mb-1.5"><Crosshair size={14} /> H-KILLS</div>
+                                <div className="flex items-center gap-1 stencil text-[9px] tracking-wider text-green-500  mb-1.5"><Crosshair size={10} /> H-KILLS</div>
                                 <div className="flex items-center gap-1">
                                   <button onClick={() => updateCharacterState(char.id, 'humanKills', -1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Minus size={14}/></button>
                                   <span className={`text-xl stencil w-5 text-center leading-none ${char.humanKills > 0 ? 'text-red-500 ' : 'text-green-500'}`}>{char.humanKills || 0}</span>
@@ -1791,7 +1791,7 @@
                                 </div>
                               </div>
                               <div className="flex flex-col items-center bg-black/50 border border-green-900/80 rounded-sm p-1.5">
-                                <div className="flex items-center gap-1 stencil text-[14px] tracking-wider text-green-500  mb-1.5"><Box size={14} /> STD LOOT</div>
+                                <div className="flex items-center gap-1 stencil text-[9px] tracking-wider text-green-500  mb-1.5"><Box size={10} /> STD LOOT</div>
                                 <div className="flex items-center gap-1">
                                   <button onClick={() => updateCharacterState(char.id, 'loot', -1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Minus size={14}/></button>
                                   <span className={`text-xl stencil w-5 text-center leading-none ${char.loot > 0 ? 'text-green-400 ' : 'text-green-500'}`}>{char.loot || 0}</span>
@@ -1799,7 +1799,7 @@
                                 </div>
                               </div>
                               <div className="flex flex-col items-center bg-black/50 border border-green-900/80 rounded-sm p-1.5">
-                                <div className="flex items-center gap-1 stencil text-[14px] tracking-wider text-green-500  mb-1.5"><Weight size={14} /> HEAVY</div>
+                                <div className="flex items-center gap-1 stencil text-[9px] tracking-wider text-green-500  mb-1.5"><Weight size={10} /> HEAVY</div>
                                 <div className="flex items-center gap-1">
                                   <button onClick={() => updateCharacterState(char.id, 'heavyLoot', -1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Minus size={14}/></button>
                                   <span className={`text-xl stencil w-5 text-center leading-none ${char.heavyLoot > 0 ? 'text-amber-500 ' : 'text-green-500'}`}>{char.heavyLoot || 0}</span>
