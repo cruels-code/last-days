@@ -782,7 +782,9 @@
                     experience: c.experience || 0,
                     loot: c.loot || 0,
                     heavyLoot: c.heavyLoot || 0,
-                    kills: c.kills || 0,
+                    zombieKills: c.zombieKills !== undefined ? c.zombieKills : (c.kills || 0),
+                    humanKills: c.humanKills || 0,
+                    weaponAmmo: c.weaponAmmo || {},
                     ooaManual: c.ooaManual || false,
                     recovering: c.recovering || false,
                     image: c.image || null
@@ -875,6 +877,18 @@
                 squad: squad.map(c => c.id === cropCharId ? { ...c, image: base64Jpeg } : c)
              });
              handleCancelCrop();
+          };
+
+          const updateWeaponAmmo = (id, weaponName, delta) => {
+            pushState({
+              squad: squad.map(char => {
+                if (char.id === id) {
+                  const currentAmmo = (char.weaponAmmo && char.weaponAmmo[weaponName]) || 0;
+                  return { ...char, weaponAmmo: { ...char.weaponAmmo, [weaponName]: Math.max(0, currentAmmo + delta) } };
+                }
+                return char;
+              })
+            });
           };
 
           const updateCharacterState = (id, field, delta) => {
@@ -1002,7 +1016,9 @@
 
               loot: 0, 
               heavyLoot: 0, 
-              kills: 0, 
+              zombieKills: 0, 
+              humanKills: 0,
+              weaponAmmo: {},
               ooaManual: false, 
               recovering: false,
               injuries: []
@@ -1411,7 +1427,7 @@
                         <table className="w-full text-center border-collapse min-w-[300px] bg-black/80">
                           <thead>
                             <tr className="bg-black stencil text-green-500 tracking-wider text-xs border-b border-green-800/80">
-                              <th className="p-2">AP</th><th className="p-2">CQC</th><th className="p-2">FA</th><th className="p-2">S</th><th className="p-2">E</th>
+                              <th className="p-2">AP</th><th className="p-2">CQC</th><th className="p-2" title="Rate of Fire">RoF</th><th className="p-2">S</th><th className="p-2">E</th>
                               <th className="p-2">DC</th><th className="p-2">H</th><th className="p-2">I</th>
                             </tr>
                           </thead>
@@ -1440,7 +1456,7 @@
                           <tr className="bg-black stencil text-green-500 tracking-wider text-sm border-b border-green-800/80">
                             <th className="p-2 pl-3">Weapon Name</th>
                             <th className="p-2 text-center">Range</th>
-                            <th className="p-2 text-center">FA</th>
+                            <th className="p-2 text-center" title="Rate of Fire">RoF</th>
                             <th className="p-2 text-center">Str</th>
                             <th className="p-2 text-center">Ammo Cap</th>
                             <th className="p-2 w-1/3">Rules Summary</th>
@@ -1725,17 +1741,17 @@
                               <div className="grid grid-cols-8 gap-0.5 text-center font-mono">
                                 {Object.entries(char.stats).map(([stat, val]) => (
                                   <div key={stat} className="flex flex-col bg-green-950/30/50 rounded-sm overflow-hidden border border-green-900/80">
-                                    <span className="text-[10px] text-green-600/80 font-bold bg-black py-0.5 tracking-wider">{stat}</span>
+                                    <span className="text-[20px] text-green-600/80 font-bold bg-black py-0.5 tracking-wider">{stat}</span>
                                     <span className="text-base stencil text-green-400 py-0.5 ">{val}</span>
                                   </div>
                                 ))}
                               </div>
                             </div>
 
-                            <div className="flex-none grid grid-cols-3 gap-1.5 p-2 border-t border-green-900/80 bg-green-950/30/30">
+                              <div className="flex-none grid grid-cols-6 gap-1.5 p-2 border-t border-green-900/80 bg-green-950/30/30">
                               
                               <div className="flex flex-col items-center bg-black/50 border border-green-900/80 rounded-sm p-1.5">
-                                <div className="flex items-center gap-1 stencil text-[10px] tracking-wider text-red-500 mb-1.5">
+                                <div className="flex items-center gap-1 stencil text-[14px] tracking-wider text-red-500 mb-1.5">
                                   {isActuallyOut ? (
                                     <Flatline size={14} className="text-red-900" />
                                   ) : (
@@ -1750,39 +1766,32 @@
                                 </div>
                               </div>
 
-                              <div className="flex flex-col items-center bg-black/50 border border-green-900/80 rounded-sm p-1.5 relative">
-                                <div className="flex items-center justify-center w-full relative mb-1.5">
-                                  <div className="flex items-center gap-1 stencil text-[10px] tracking-wider text-blue-400 "><ShieldAlert size={10} /> AMMO</div>
-                                  <button onClick={() => updateCharacterState(char.id, 'ammo', -char.ammo)} className="absolute right-0 text-green-700/80 hover:text-blue-400 active:scale-95 transition-all" title="Reset Ammo to 0"><RotateCcw size={10} /></button>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <button onClick={() => updateCharacterState(char.id, 'ammo', -1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Minus size={14}/></button>
-                                  <span className={`text-xl stencil w-5 text-center leading-none ${char.ammo > 0 ? 'text-blue-400 ' : 'text-green-500'}`}>{char.ammo}</span>
-                                  <button onClick={() => updateCharacterState(char.id, 'ammo', 1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Plus size={14}/></button>
-                                </div>
-                              </div>
-
                               <div className={`flex flex-col items-center rounded-sm p-1.5 transition-all duration-300 border ${char.noise > 0 && char.noise === maxNoise && !isActuallyOut ? 'bg-red-950/60 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)] animate-pulse' : 'bg-black/50 border-green-900/80'}`}>
-                                <div className="flex items-center gap-1 stencil text-[10px] tracking-wider text-amber-500  mb-1.5"><Volume2 size={10} /> NOISE</div>
+                                <div className="flex items-center gap-1 stencil text-[14px] tracking-wider text-amber-500  mb-1.5"><Volume2 size={14} /> NOISE</div>
                                 <div className="flex items-center gap-1">
                                   <button onClick={() => updateCharacterState(char.id, 'noise', -1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Minus size={14}/></button>
                                   <span className={`text-xl stencil w-5 text-center leading-none ${char.noise > 0 ? 'text-amber-500 ' : 'text-green-500'}`}>{char.noise}</span>
                                   <button onClick={() => updateCharacterState(char.id, 'noise', 1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Plus size={14}/></button>
                                 </div>
                               </div>
-                            </div>
-
-                            <div className="flex-none grid grid-cols-3 gap-1.5 p-2 border-t border-green-900/80 bg-green-950/30/40">
                               <div className="flex flex-col items-center bg-black/50 border border-green-900/80 rounded-sm p-1.5">
-                                <div className="flex items-center gap-1 stencil text-[10px] tracking-wider text-green-500  mb-1.5"><Skull size={10} /> KILLS</div>
+                                <div className="flex items-center gap-1 stencil text-[14px] tracking-wider text-green-500  mb-1.5"><Skull size={14} /> Z-KILLS</div>
                                 <div className="flex items-center gap-1">
-                                  <button onClick={() => updateCharacterState(char.id, 'kills', -1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Minus size={14}/></button>
-                                  <span className={`text-xl stencil w-5 text-center leading-none ${char.kills > 0 ? 'text-red-500 ' : 'text-green-500'}`}>{char.kills || 0}</span>
-                                  <button onClick={() => updateCharacterState(char.id, 'kills', 1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Plus size={14}/></button>
+                                  <button onClick={() => updateCharacterState(char.id, 'zombieKills', -1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Minus size={14}/></button>
+                                  <span className={`text-xl stencil w-5 text-center leading-none ${char.zombieKills > 0 ? 'text-red-500 ' : 'text-green-500'}`}>{char.zombieKills || 0}</span>
+                                  <button onClick={() => updateCharacterState(char.id, 'zombieKills', 1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Plus size={14}/></button>
                                 </div>
                               </div>
                               <div className="flex flex-col items-center bg-black/50 border border-green-900/80 rounded-sm p-1.5">
-                                <div className="flex items-center gap-1 stencil text-[10px] tracking-wider text-green-500  mb-1.5"><Box size={10} /> STD LOOT</div>
+                                <div className="flex items-center gap-1 stencil text-[14px] tracking-wider text-green-500  mb-1.5"><Crosshair size={14} /> H-KILLS</div>
+                                <div className="flex items-center gap-1">
+                                  <button onClick={() => updateCharacterState(char.id, 'humanKills', -1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Minus size={14}/></button>
+                                  <span className={`text-xl stencil w-5 text-center leading-none ${char.humanKills > 0 ? 'text-red-500 ' : 'text-green-500'}`}>{char.humanKills || 0}</span>
+                                  <button onClick={() => updateCharacterState(char.id, 'humanKills', 1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Plus size={14}/></button>
+                                </div>
+                              </div>
+                              <div className="flex flex-col items-center bg-black/50 border border-green-900/80 rounded-sm p-1.5">
+                                <div className="flex items-center gap-1 stencil text-[14px] tracking-wider text-green-500  mb-1.5"><Box size={14} /> STD LOOT</div>
                                 <div className="flex items-center gap-1">
                                   <button onClick={() => updateCharacterState(char.id, 'loot', -1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Minus size={14}/></button>
                                   <span className={`text-xl stencil w-5 text-center leading-none ${char.loot > 0 ? 'text-green-400 ' : 'text-green-500'}`}>{char.loot || 0}</span>
@@ -1790,7 +1799,7 @@
                                 </div>
                               </div>
                               <div className="flex flex-col items-center bg-black/50 border border-green-900/80 rounded-sm p-1.5">
-                                <div className="flex items-center gap-1 stencil text-[10px] tracking-wider text-green-500  mb-1.5"><Weight size={10} /> HEAVY</div>
+                                <div className="flex items-center gap-1 stencil text-[14px] tracking-wider text-green-500  mb-1.5"><Weight size={14} /> HEAVY</div>
                                 <div className="flex items-center gap-1">
                                   <button onClick={() => updateCharacterState(char.id, 'heavyLoot', -1)} className="w-6 h-6 flex items-center justify-center border border-green-800/80 bg-green-900/40 active:bg-green-700 active:scale-95 rounded-sm text-green-400 transition-all"><Minus size={14}/></button>
                                   <span className={`text-xl stencil w-5 text-center leading-none ${char.heavyLoot > 0 ? 'text-amber-500 ' : 'text-green-500'}`}>{char.heavyLoot || 0}</span>
@@ -1809,23 +1818,29 @@
                               <div>
                                 <span className="stencil uppercase tracking-wider text-[10px]  text-green-500 block mb-1">Hardware (Tap for info)</span>
                                 <div className="flex flex-wrap gap-1.5">
-                                  {char.equipment.length === 0 ? <span className="text-[10px] font-mono text-green-700/80 italic">Unarmed</span> : char.equipment.map((eq, i) => {
+                                  {char.equipment.length === 0 ? <span className="text-[20px] font-mono text-green-700/80 italic">Unarmed</span> : char.equipment.map((eq, i) => {
                                     const wp = WEAPON_DATA[eq];
                                     return (
                                       <div 
                                         key={i} 
                                         onClick={() => showNotify(TOOLTIPS[eq] || "No description available.")}
-                                        className="flex flex-col px-2 py-1 bg-green-900/40 active:bg-green-800/50 text-green-400 rounded-sm border border-green-800/80 cursor-pointer transition-colors"
+                                        className="flex flex-col px-2.5 py-1.5 bg-green-900/40 active:bg-green-800/50 text-green-400 rounded-sm border border-green-800/80 cursor-pointer transition-colors"
                                       >
-                                        <span className="text-[10px] stencil truncate ">{eq}</span>
+                                        <span className="text-[14px] stencil truncate ">{eq}</span>
                                         {wp && wp.type === 'Ranged' && (
-                                          <div className="text-[10px] stencil text-blue-400 mt-0.5 tracking-wider leading-tight">
+                                          <div className="text-[14px] stencil text-blue-400 mt-1 tracking-wider leading-tight flex flex-col gap-1.5">
                                             <div>Rng: {wp.range}" | Hit: {Math.max(2, 7 - char.stats.FA - wp.fa)}+</div>
-                                            <div>Ammo: {char.ammo}/{wp.cap}</div>
+                                            <div className="flex items-center gap-1.5 justify-between bg-black/40 p-1 rounded-sm border border-blue-900/50">
+                                              <span>Ammo: {(char.weaponAmmo && char.weaponAmmo[eq]) || 0}/{wp.cap}</span>
+                                              <div className="flex space-x-1.5" onClick={(e) => e.stopPropagation()}>
+                                                <button onClick={() => updateWeaponAmmo(char.id, eq, -1)} className="bg-blue-900/40 hover:bg-blue-800/50 p-1 rounded-sm"><Minus size={14} /></button>
+                                                <button onClick={() => updateWeaponAmmo(char.id, eq, 1)} className="bg-blue-900/40 hover:bg-blue-800/50 p-1 rounded-sm"><Plus size={14} /></button>
+                                              </div>
+                                            </div>
                                           </div>
                                         )}
                                         {wp && wp.type === 'Melee' && (
-                                          <div className="text-[10px] stencil text-red-400 mt-0.5 tracking-wider leading-tight">
+                                          <div className="text-[14px] stencil text-red-400 mt-1 tracking-wider leading-tight flex flex-col gap-0.5">
                                             <div>CQC: 1D6+{char.stats.CQC + wp.cqc}</div>
                                             <div>Dmg: 1D6+{char.stats.S + wp.str}</div>
                                           </div>
@@ -2089,7 +2104,8 @@
                                 </div>
                               </div>
                               <div className="flex items-center gap-4 text-green-500/60 stencil text-xs">
-                                <div className="flex items-center gap-1" title="Kills"><Crosshair size={14} /> {char.kills || 0}</div>
+                                <div className="flex items-center gap-1" title="Zombie Kills"><Skull size={14} /> {char.zombieKills || 0}</div>
+                                <div className="flex items-center gap-1" title="Human Kills"><Crosshair size={14} /> {char.humanKills || 0}</div>
                                 <div className="flex items-center gap-1" title="Standard Loot"><Box size={14} /> {char.loot || 0}</div>
                                 <div className="flex items-center gap-1" title="Heavy Loot"><Weight size={14} /> {char.heavyLoot || 0}</div>
                                 {isActuallyOut && <Skull size={16} className="text-red-600 ml-2" />}
