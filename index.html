@@ -238,25 +238,25 @@
         const UPGRADE_LIST = Object.keys(UPGRADE_DATA);
 
         const WEAPON_DATA = {
-          "Revolver": { type: "Ranged", range: 12, fa: 1, str: 3, cap: "6" },
-          "Semi-Automatic": { type: "Ranged", range: 12, fa: 2, str: 3, cap: "10" },
-          "Magnum": { type: "Ranged", range: 12, fa: 1, str: 4, cap: "6" },
-          "Surplus SMG": { type: "Ranged", range: 12, fa: 3, str: 3, cap: "6" },
-          "Military SMG": { type: "Ranged", range: 18, fa: 3, str: 3, cap: "8" },
-          "Hunting Rifle": { type: "Ranged", range: 24, fa: 1, str: 3, cap: "6" },
-          "High-powered Rifle": { type: "Ranged", range: 30, fa: 1, str: 4, cap: "4" },
-          "Military Sniper Rifle": { type: "Ranged", range: 30, fa: 1, str: 4, cap: "6" },
-          "Surplus Assault Rifle": { type: "Ranged", range: 18, fa: 2, str: 4, cap: "10" },
-          "Military Assault Rifle": { type: "Ranged", range: 24, fa: 3, str: 4, cap: "12" },
-          "Sawn off/Breech Loading Shotgun": { type: "Ranged", range: 9, fa: 1, str: 6, cap: "2" },
-          "Pump-Action Shotgun": { type: "Ranged", range: 18, fa: 1, str: 6, cap: "5" },
-          "Combat Shotgun": { type: "Ranged", range: 18, fa: 2, str: 6, cap: "5" },
-          "Squad Automatic Weapon": { type: "Ranged", range: 24, fa: 4, str: 5, cap: "15" },
-          "Minigun": { type: "Ranged", range: 18, fa: 6, str: 5, cap: "20" },
-          "Hunting Bow": { type: "Ranged", range: 18, fa: 1, str: 3, cap: "2" },
-          "Hunting Crossbow": { type: "Ranged", range: 24, fa: 1, str: 4, cap: "2" },
-          "Thrown Explosive": { type: "Ranged", range: 0, fa: 1, str: 4, cap: "1" },
-          "Fire Bomb": { type: "Ranged", range: 0, fa: 1, str: 3, cap: "1" },
+          "Revolver": { type: "Ranged", range: 12, fa: 1, str: 3, cap: "6", knockback: 1 },
+          "Semi-Automatic": { type: "Ranged", range: 12, fa: 2, str: 3, cap: "10", knockback: 1 },
+          "Magnum": { type: "Ranged", range: 12, fa: 1, str: 4, cap: "6", knockback: 2 },
+          "Surplus SMG": { type: "Ranged", range: 12, fa: 3, str: 3, cap: "6", knockback: 1 },
+          "Military SMG": { type: "Ranged", range: 18, fa: 3, str: 3, cap: "8", knockback: 1 },
+          "Hunting Rifle": { type: "Ranged", range: 24, fa: 1, str: 3, cap: "6", knockback: 1 },
+          "High-powered Rifle": { type: "Ranged", range: 30, fa: 1, str: 4, cap: "4", knockback: 2 },
+          "Military Sniper Rifle": { type: "Ranged", range: 30, fa: 1, str: 4, cap: "6", knockback: 2 },
+          "Surplus Assault Rifle": { type: "Ranged", range: 18, fa: 2, str: 4, cap: "10", knockback: 2 },
+          "Military Assault Rifle": { type: "Ranged", range: 24, fa: 3, str: 4, cap: "12", knockback: 2 },
+          "Sawn off/Breech Loading Shotgun": { type: "Ranged", range: 9, fa: 1, str: 6, cap: "2", knockback: "3/2/1" },
+          "Pump-Action Shotgun": { type: "Ranged", range: 18, fa: 1, str: 6, cap: "5", knockback: "3/2/2" },
+          "Combat Shotgun": { type: "Ranged", range: 18, fa: 2, str: 6, cap: "5", knockback: "3/2/3" },
+          "Squad Automatic Weapon": { type: "Ranged", range: 24, fa: 4, str: 5, cap: "15", knockback: 2 },
+          "Minigun": { type: "Ranged", range: 18, fa: 6, str: 5, cap: "20", knockback: 1 },
+          "Hunting Bow": { type: "Ranged", range: 18, fa: 1, str: 3, cap: "2", knockback: 0 },
+          "Hunting Crossbow": { type: "Ranged", range: 24, fa: 1, str: 4, cap: "2", knockback: 0 },
+          "Thrown Explosive": { type: "Ranged", range: 0, fa: 1, str: 4, cap: "1", knockback: 5 },
+          "Fire Bomb": { type: "Ranged", range: 0, fa: 1, str: 3, cap: "1", knockback: 1 },
           "Chainsaw": { type: "Melee", cqc: -1, str: 4 },
           "Club": { type: "Melee", cqc: 0, str: 1 },
           "Heavy Blade": { type: "Melee", cqc: 1, str: 2 },
@@ -444,30 +444,30 @@
           "Tag Team": "While within 3” of a friendly Character with the same Keyword, spend 1 AP and pass Intelligence/6 to consecutively activate them.",
           "Sniper": "Aims at the head and gains +1 Lobotomizer to any Ranged Attacks. If put on Watch after a game, adds +2 to drive off zombies.",
           // Equipment 
-          "Revolver": "Ranged Weapon. Range: 12”, FA Modifier: +1, Strength: 3. Reload: 6.",
-          "Semi-Automatic": "Ranged Weapon. Range: 12”, FA Modifier: +2, Strength: 3. Reload: 10.",
-          "Magnum": "Ranged Weapon. Range: 12”, FA Modifier: +1, Strength: 4. Rules: Noisy 1. Reload: 6.",
-          "Surplus SMG": "Ranged Weapon. Range: 12”, FA Modifier: +3, Strength: 3. Reload: 6.",
-          "Military SMG": "Ranged Weapon. Range: 18”, FA Modifier: +3, Strength: 3. Reload: 8.",
-          "Hunting Rifle": "Ranged Weapon. Range: 24”, FA Modifier: +1, Strength: 3. Reload: 6.",
-          "High-powered Rifle": "Ranged Weapon. Range: 30”, FA Modifier: +1, Strength: 4. Rules: Noisy 1. Reload: 4.",
-          "Military Sniper Rifle": "Ranged Weapon. Range: 30”, FA Modifier: +1, Strength: 4. Rules: Noisy 1, Lobotomizer 1, Highly Specialized. Reload: 6.",
-          "Surplus Assault Rifle": "Ranged Weapon. Range: 18”, FA Modifier: +2, Strength: 4. Rules: Noisy 1. Reload: 10.",
-          "Military Assault Rifle": "Ranged Weapon. Range: 24”, FA Modifier: +3, Strength: 4. Reload: 12.",
-          "Sawn off/Breech Loading Shotgun": "Ranged Weapon. Range: 3/6/9”, FA Modifier: +1, Strength: 6/4/2. Rules: Stepped Fire, Point Blank. Reload: 2.",
-          "Pump-Action Shotgun": "Ranged Weapon. Range: 6/12/18”, FA Modifier: +1, Strength: 6/4/3. Rules: Stepped Fire, Point Blank. Reload: 5.",
-          "Combat Shotgun": "Ranged Weapon. Range: 6/12/18”, FA Modifier: +2, Strength: 6/4/3. Rules: Stepped Fire, Point Blank. Reload: 5.",
-          "Squad Automatic Weapon": "Ranged Weapon. Range: 24”, FA Modifier: +4, Strength: 5. Rules: Noisy 1, Heavy 1, Slow Reload, Highly Specialized. Reload: 15.",
-          "Minigun": "Ranged Weapon. Range: 18”, FA Modifier: +6, Strength: 5. Rules: Noisy 2, Heavy 2, Slow Reload, Highly Specialized. Reload: 20.",
-          "Hunting Bow": "Ranged Weapon. Range: 9/18”, FA Modifier: +1, Strength: 3/2. Rules: Lobotomizer 2, Stepped Fire, Silent. Reload: 2.",
-          "Hunting Crossbow": "Ranged Weapon. Range: 12/24”, FA Modifier: +1, Strength: 4/3. Rules: Lobotomizer 2, Stepped Fire, Silent. Reload: 2.",
-          "Thrown Explosive": "Thrown Weapon. Range: User Str x 3”, Strength: 4. Rules: Explosive 3, One-Use, Thrown, Noisy 2.",
-          "Fire Bomb": "Thrown Weapon. Range: User Str x 3”, Strength: 3. Rules: Explosive 3, One-Use, Thrown, Noisy 1, Fire.",
-          "Chainsaw": "Close Quarters Weapon. CQC Modifier: -1, Strength: +4. Rules: Noisy 2, Heavy 2, Lobotomizer 2.",
-          "Club": "Close Quarters Weapon. CQC Modifier: +0, Strength: +1.",
-          "Heavy Blade": "Close Quarters Weapon. CQC Modifier: +1, Strength: +2. Rules: Lobotomizer 1.",
-          "Heavy Club": "Close Quarters Weapon. CQC Modifier: -1, Strength: +3. Rules: Heavy 1, Lobotomizer 1.",
-          "Knife": "Close Quarters Weapon. CQC Modifier: +1, Strength: +0. Rules: Lobotomizer 1.",
+          "Revolver": "PISTOL | Ranged Weapon\nRange: 12\" | RoF: +1 | Dmg: 3 | Reload: 6\nKnockback: 1",
+          "Semi-Automatic": "PISTOL | Ranged Weapon\nRange: 12\" | RoF: +2 | Dmg: 3 | Reload: 10\nKnockback: 1",
+          "Magnum": "PISTOL | Ranged Weapon\nRange: 12\" | RoF: +1 | Dmg: 4 | Reload: 6\nKnockback: 2\nRules: Noisy 1.",
+          "Surplus SMG": "SMG | Ranged Weapon\nRange: 12\" | RoF: +3 | Dmg: 3 | Reload: 6\nKnockback: 1",
+          "Military SMG": "SMG | Ranged Weapon\nRange: 18\" | RoF: +3 | Dmg: 3 | Reload: 8\nKnockback: 1",
+          "Hunting Rifle": "RIFLE | Ranged Weapon\nRange: 24\" | RoF: +1 | Dmg: 3 | Reload: 6\nKnockback: 1",
+          "High-powered Rifle": "RIFLE | Ranged Weapon\nRange: 30\" | RoF: +1 | Dmg: 4 | Reload: 4\nKnockback: 2\nRules: Noisy 1.",
+          "Military Sniper Rifle": "RIFLE | Ranged Weapon\nRange: 30\" | RoF: +1 | Dmg: 4 | Reload: 6\nKnockback: 2\nRules: Noisy 1, Lobotomizer 1, Highly Specialized.",
+          "Surplus Assault Rifle": "RIFLE | Ranged Weapon\nRange: 18\" | RoF: +2 | Dmg: 4 | Reload: 10\nKnockback: 2\nRules: Noisy 1.",
+          "Military Assault Rifle": "RIFLE | Ranged Weapon\nRange: 24\" | RoF: +3 | Dmg: 4 | Reload: 12\nKnockback: 2",
+          "Sawn off/Breech Loading Shotgun": "SHOTGUN | Ranged Weapon\nRange: 3/6/9\" | RoF: +1 | Dmg: 6/4/2 | Reload: 2\nKnockback: 3/2/1 (stepped by range band)\nRules: Stepped Fire, Point Blank.",
+          "Pump-Action Shotgun": "SHOTGUN | Ranged Weapon\nRange: 6/12/18\" | RoF: +1 | Dmg: 6/4/3 | Reload: 5\nKnockback: 3/2/2 (stepped by range band)\nRules: Stepped Fire, Point Blank.",
+          "Combat Shotgun": "SHOTGUN | Ranged Weapon\nRange: 6/12/18\" | RoF: +2 | Dmg: 6/4/4 | Reload: 5\nKnockback: 3/2/3 (stepped by range band)\nRules: Stepped Fire, Point Blank.",
+          "Squad Automatic Weapon": "HEAVY | Ranged Weapon\nRange: 24\" | RoF: +4 | Dmg: 5 | Reload: 15\nKnockback: 2\nRules: Noisy 1, Heavy 1, Slow Reload, Highly Specialized.",
+          "Minigun": "HEAVY | Ranged Weapon\nRange: 18\" | RoF: +6 | Dmg: 5 | Reload: 20\nKnockback: 1\nRules: Noisy 2, Heavy 2, Slow Reload, Highly Specialized.",
+          "Hunting Bow": "SPORTING | Ranged Weapon\nRange: 9/18\" | RoF: +1 | Dmg: 3/2 | Reload: 2\nKnockback: 0\nRules: Lobotomizer 2, Stepped Fire, Silent.",
+          "Hunting Crossbow": "SPORTING | Ranged Weapon\nRange: 12/24\" | RoF: +1 | Dmg: 4/3 | Reload: 2\nKnockback: 0\nRules: Lobotomizer 2, Stepped Fire, Silent.",
+          "Thrown Explosive": "EXPLOSIVE | Thrown Weapon\nRange: Thrower Str x 3\" | RoF: 1 | Dmg: 4 | One-Use\nKnockback: 5\nRules: Explosive 3, Thrown, Noisy 2.",
+          "Fire Bomb": "EXPLOSIVE | Thrown Weapon\nRange: Thrower Str x 3\" | RoF: 1 | Dmg: 3 | One-Use\nKnockback: 1\nRules: Explosive 3, Thrown, Noisy 1, Fire.",
+          "Chainsaw": "CQC WEAPON\nCQC Modifier: -1 | Strength: +4\nRules: Noisy 2, Heavy 2, Lobotomizer 2.",
+          "Club": "CQC WEAPON\nCQC Modifier: +0 | Strength: +1\nRules: None.",
+          "Heavy Blade": "CQC WEAPON\nCQC Modifier: +1 | Strength: +2\nRules: Lobotomizer 1.",
+          "Heavy Club": "CQC WEAPON\nCQC Modifier: -1 | Strength: +3\nRules: Heavy 1, Lobotomizer 1.",
+          "Knife": "CQC WEAPON\nCQC Modifier: +1 | Strength: +0\nRules: Lobotomizer 1.",
           "Assault Armour": "Equipment. Full bodysuit of heavy Kevlar. +2 Endurance against Ranged and Close Quarters Attacks. Heavy 1 (-1 AP). One-use.",
           "Booze": "Equipment. +1 to CQC, Endurance, Courage. -1 to AP, Firearms, Intelligence. One-use.",
           "Climbing Gear": "Equipment. Create an ad-hoc one-level ladder. Mark bottom of terrain. Remains for the rest of game. One-use.",
@@ -895,7 +895,7 @@
             pushState({
               squad: squad.map(char => {
                 if (char.id === id) {
-                  let newValue = char[field] + delta;
+                  let newValue = (char[field] || 0) + delta;
                   if (newValue < 0) newValue = 0;
                   if (field === 'damage' && newValue > char.stats.DC) newValue = char.stats.DC;
                   return { ...char, [field]: newValue };
@@ -930,8 +930,33 @@
             pushState({ squad: squad.map(char => char.id === id ? { ...char, activated: !char.activated } : char) });
           };
 
-          const toggleOutOfAmmo = (id) => {
-            pushState({ squad: squad.map(char => char.id === id ? { ...char, outOfAmmo: !char.outOfAmmo } : char) });
+          const toggleWeaponOutOfAmmo = (id, weaponName) => {
+            pushState({
+              squad: squad.map(char => {
+                if (char.id === id) {
+                  const currentOut = (char.weaponOutOfAmmo && char.weaponOutOfAmmo[weaponName]) || false;
+                  return { ...char, weaponOutOfAmmo: { ...(char.weaponOutOfAmmo || {}), [weaponName]: !currentOut } };
+                }
+                return char;
+              })
+            });
+          };
+
+          const reloadWeapon = (id, weaponName) => {
+            const wp = WEAPON_DATA[weaponName];
+            if (!wp) return;
+            pushState({
+              squad: squad.map(char => {
+                if (char.id === id) {
+                  return { 
+                    ...char, 
+                    weaponAmmo: { ...(char.weaponAmmo || {}), [weaponName]: 0 },
+                    weaponOutOfAmmo: { ...(char.weaponOutOfAmmo || {}), [weaponName]: false }
+                  };
+                }
+                return char;
+              })
+            });
           };
 
           const clearAllNoise = () => {
@@ -1728,9 +1753,7 @@
                                 <button onClick={() => !isActuallyOut && toggleActivated(char.id)} disabled={isActuallyOut} className={`flex items-center gap-1.5 px-1.5 py-1 rounded-[2px] stencil text-[10px] uppercase tracking-wider transition-all active:scale-95 whitespace-nowrap ${char.activated ? 'bg-green-500 text-black font-bold border border-green-400 shadow-[0_0_15px_rgba(34,197,94,0.6)]' : 'bg-green-900/40 text-green-600/80 border border-green-800/80 hover:bg-green-800/50 hover:text-green-400'}`}>
                                   <Zap size={12} className={char.activated ? 'text-black' : ''} /> {char.activated ? 'ACTIVATED' : 'Activated'}
                                 </button>
-                                <button onClick={() => !isActuallyOut && toggleOutOfAmmo(char.id)} disabled={isActuallyOut} className={`flex items-center gap-1.5 px-1.5 py-1 rounded-[2px] stencil text-[10px] uppercase tracking-wider transition-all active:scale-95 whitespace-nowrap ${char.outOfAmmo ? 'bg-red-500 text-black font-bold border border-red-400 shadow-[0_0_10px_rgba(239,68,68,0.8)]' : 'bg-red-900/20 text-red-600/80 border border-red-900/80 hover:bg-red-900/50 hover:text-red-400'}`}>
-                                  <AlertTriangle size={12} className={char.outOfAmmo ? 'text-black' : ''} /> {char.outOfAmmo ? 'OUT OF AMMO' : 'Out of Ammo'}
-                                </button>
+
                                 <button onClick={() => !isActuallyOut && toggleOverwatch(char.id)} disabled={isActuallyOut} className={`flex items-center gap-1.5 px-1.5 py-1 rounded-[2px] stencil text-[10px] uppercase tracking-wider transition-all active:scale-95 whitespace-nowrap ${char.overwatch ? 'bg-amber-500 text-black font-bold border border-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.8)]' : 'bg-green-900/40 text-green-600/80 border border-green-800/80 hover:bg-green-800/50 hover:text-green-400'}`}>
                                   <Crosshair size={12} className={char.overwatch ? 'animate-pulse text-black' : ''} /> {char.overwatch ? 'LOCKED & LOADED' : 'Overwatch'}
                                 </button>
@@ -1836,6 +1859,14 @@
                                                 <button onClick={() => updateWeaponAmmo(char.id, eq, -1)} className="bg-blue-900/40 hover:bg-blue-800/50 p-1 rounded-sm"><Minus size={14} /></button>
                                                 <button onClick={() => updateWeaponAmmo(char.id, eq, 1)} className="bg-blue-900/40 hover:bg-blue-800/50 p-1 rounded-sm"><Plus size={14} /></button>
                                               </div>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 justify-between bg-black/40 p-1 rounded-sm border border-blue-900/50 mt-1">
+                                              <button onClick={(e) => { e.stopPropagation(); toggleWeaponOutOfAmmo(char.id, eq); }} className={`flex-1 flex justify-center items-center gap-1 p-1 rounded-sm transition-all ${char.weaponOutOfAmmo && char.weaponOutOfAmmo[eq] ? 'bg-red-500 text-black shadow-[0_0_8px_rgba(239,68,68,0.8)]' : 'bg-red-900/30 text-red-500 border border-red-900/50 hover:bg-red-900/50'}`}>
+                                                <AlertTriangle size={12} /> {char.weaponOutOfAmmo && char.weaponOutOfAmmo[eq] ? 'OUT OF AMMO' : 'OOA'}
+                                              </button>
+                                              <button onClick={(e) => { e.stopPropagation(); reloadWeapon(char.id, eq); }} className="flex justify-center items-center gap-1 p-1 px-2 rounded-sm bg-blue-900/40 border border-blue-900/50 hover:bg-blue-800 text-blue-400">
+                                                <RotateCcw size={12} /> Reload
+                                              </button>
                                             </div>
                                           </div>
                                         )}
